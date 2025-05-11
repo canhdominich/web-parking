@@ -5,7 +5,8 @@ import { UserModule } from './users/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { createDataSource } from './data-source';
-
+import { VehicleModule } from './vehicles/vehicle.module';
+import { VehicleRatePlanModule } from './vehicleRatePlans/vehicle-rate-plan.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,6 +21,8 @@ import { createDataSource } from './data-source';
       inject: [ConfigService],
     }),
     UserModule,
+    VehicleModule,
+    VehicleRatePlanModule,
   ],
 })
 export class AppModule {}
