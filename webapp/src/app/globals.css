@@ -28,7 +28,7 @@
   --text-title-sm--line-height: 38px;
   --text-theme-xl: 20px;
   --text-theme-xl--line-height: 30px;
-  --text-theme-sm: 14px;
+  --text-theme-sm: 16px;
   --text-theme-sm--line-height: 20px;
   --text-theme-xs: 12px;
   --text-theme-xs--line-height: 18px;
@@ -190,6 +190,13 @@
   body {
     @apply relative font-normal font-outfit z-1 bg-gray-50;
   }
+  html {
+    font-size: 20px; /* Base font size */
+  }
+  
+  body {
+    @apply text-2xl; /* Use the base font size we defined in tailwind config */
+  }
 }
 
 @utility menu-item {
@@ -278,8 +285,6 @@
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: #344054;
 }
-
-
 
 @layer utilities {
   /* For Remove Date Icon */

@@ -5,133 +5,56 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Next.js Basic Table | TailAdmin - Next.js Dashboard Template",
+  title: "Parking Management System",
   description:
-    "This is Next.js Basic Table  page for TailAdmin  Tailwind CSS Admin Dashboard Template",
-  // other metadata
+    "This is Parking Management System",
 };
 
-interface User {
-  id: number;
+interface Vihecle {
+  id: string;
   user: {
-    image: string;
     name: string;
+    phone: string;
+    email: string;
     role: string;
   };
-  projectName: string;
-  team: {
-    images: string[];
-  };
+  licensePlate: string;
   status: string;
-  budget: string;
+  vehicleType: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Define the table data using the interface
-const items: User[] = [
+const items: Vihecle[] = [
   {
-    id: 1,
-    user: {
-      image: "/images/user/user-17.jpg",
-      name: "Lindsey Curtis",
-      role: "Web Designer",
+    "id": "2",
+    "user": {
+      "name": "Backer",
+      "phone": "0123456789",
+      "email": "john@example.com1",
+      "role": "ParkingGuest",
     },
-    projectName: "Agency Website",
-    team: {
-      images: [
-        "/images/user/user-22.jpg",
-        "/images/user/user-23.jpg",
-        "/images/user/user-24.jpg",
-      ],
-    },
-    budget: "3.9K",
-    status: "Active",
-  },
-  {
-    id: 2,
-    user: {
-      image: "/images/user/user-18.jpg",
-      name: "Kaiya George",
-      role: "Project Manager",
-    },
-    projectName: "Technology",
-    team: {
-      images: ["/images/user/user-25.jpg", "/images/user/user-26.jpg"],
-    },
-    budget: "24.9K",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    user: {
-      image: "/images/user/user-17.jpg",
-      name: "Zain Geidt",
-      role: "Content Writing",
-    },
-    projectName: "Blog Writing",
-    team: {
-      images: ["/images/user/user-27.jpg"],
-    },
-    budget: "12.7K",
-    status: "Active",
-  },
-  {
-    id: 4,
-    user: {
-      image: "/images/user/user-20.jpg",
-      name: "Abram Schleifer",
-      role: "Digital Marketer",
-    },
-    projectName: "Social Media",
-    team: {
-      images: [
-        "/images/user/user-28.jpg",
-        "/images/user/user-29.jpg",
-        "/images/user/user-30.jpg",
-      ],
-    },
-    budget: "2.8K",
-    status: "Cancel",
-  },
-  {
-    id: 5,
-    user: {
-      image: "/images/user/user-21.jpg",
-      name: "Carla George",
-      role: "Front-end Developer",
-    },
-    projectName: "Website",
-    team: {
-      images: [
-        "/images/user/user-31.jpg",
-        "/images/user/user-32.jpg",
-        "/images/user/user-33.jpg",
-      ],
-    },
-    budget: "4.5K",
-    status: "Active",
-  },
-];
+    "licensePlate": "51F-12345",
+    "vehicleType": "Motorbike",
+    "status": "Active",
+    "createdAt": "2025-05-11T03:08:26.093Z",
+    "updatedAt": "2025-05-11T03:08:26.093Z"
+  }
+]
 
 const headers = [
   {
-    key: "id",
-    title: "Tài khoản"
-  },
-  {
     key: "user",
-    title: "Người dùng"
+    title: "Chủ sở hữu"
   },
   {
-    key: "projectName",
-    title: "projectName"
+    key: "licensePlate",
+    title: "Biển số xe"
   },
   {
-    key: "team",
-    title: "Team"
-  },
-  {
-    key: "budget",
-    title: "Budget"
+    key: "vehicleType",
+    title: "Loại xe"
   },
   {
     key: "status",
