@@ -13,6 +13,9 @@ export const getUserById = async (id: string) => {
 export const createUser = async (data: {
     name: string
     email: string
+    phone: string
+    password: string
+    role: string
     [key: string]: any
 }) => {
     const res = await httpClient.post('/users', data)

@@ -42,6 +42,8 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+  app.enableCors();
+
   const options = new DocumentBuilder()
     .setTitle('API')
     .setDescription('API docs')
