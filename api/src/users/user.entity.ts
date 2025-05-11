@@ -1,24 +1,32 @@
+import { UserRole } from 'src/constants/user.constant';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('users') // Tên bảng trong cơ sở dữ liệu
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
-  id: number; // Khóa chính, tự tăng
+  id: number;
 
   @Column({ type: 'varchar', length: 15 })
-  phone: string; // Số điện thoại
+  phone: string;
 
   @Column({ type: 'varchar', length: 255 })
-  email: string; // Email
+  email: string;
 
   @Column({ type: 'varchar', length: 255 })
-  password: string; // Mã hóa mật khẩu
+  password: string;
+
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.ParkingGuest })
+  role: UserRole;
 
   @CreateDateColumn({ type: 'datetime' })
-  createdAt: Date; // Ngày tạo tài khoản
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'datetime' })
+  updatedAt: Date;
 }
