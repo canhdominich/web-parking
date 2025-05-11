@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,6 +10,7 @@ import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRole } from 'src/constants/user.constant';
+import { hash } from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -29,16 +31,24 @@ export class UserService {
       );
     }
 
-    // Check if email already exists
+    // Check if user with email already exists
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
 
     if (existingUser) {
-      throw new BadRequestException('Email already exists');
+      throw new ConflictException('Email already exists');
     }
 
-    const user = this.userRepository.create(createUserDto);
+    // Hash password before saving
+    const hashedPassword = await hash(createUserDto.password, 10);
+
+    // Create user with hashed password
+    const user = this.userRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+
     return this.userRepository.save(user);
   }
 

@@ -11,6 +11,7 @@ import { ParkingLotModule } from './parkingLot/parking-lot.module';
 import { ParkingSlotModule } from './parkingSlot/parking-slot.module';
 import { BookingModule } from './booking/booking.module';
 import { PaymentModule } from './payments/payment.module';
+import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,6 +25,7 @@ import { PaymentModule } from './payments/payment.module';
       },
       inject: [ConfigService],
     }),
+    AuthModule,
     UserModule,
     VehicleModule,
     VehicleRatePlanModule,
