@@ -9,6 +9,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('vehicles')
@@ -26,6 +27,7 @@ export class Vehicle {
   @Column({ type: 'varchar', length: 255 })
   licensePlate: string;
 
+  @Index('IDX_vehicle_type')
   @Column({ type: 'enum', enum: VehicleTypeEnum })
   vehicleType: VehicleTypeEnum;
 
