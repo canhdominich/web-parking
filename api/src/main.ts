@@ -9,6 +9,8 @@ import { VehicleModule } from './vehicles/vehicle.module';
 import { VehicleRatePlanModule } from './vehicleRatePlans/vehicle-rate-plan.module';
 import { ParkingLotModule } from './parkingLots/parking-lot.module';
 import { ParkingSlotModule } from './parkingSlots/parking-slot.module';
+import { BookingModule } from './booking/booking.module';
+import { PaymentModule } from './payments/payment.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -27,6 +29,8 @@ import { ParkingSlotModule } from './parkingSlots/parking-slot.module';
     VehicleRatePlanModule,
     ParkingLotModule,
     ParkingSlotModule,
+    BookingModule,
+    PaymentModule,
   ],
 })
 export class AppModule {}
