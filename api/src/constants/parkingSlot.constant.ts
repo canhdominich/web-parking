@@ -1,4 +1,4 @@
 export enum ParkingSlotStatus {
-  Available = 'available',
-  Occupied = 'occupied',
+  Available = 'Available',
+  Occupied = 'Occupied',
 }

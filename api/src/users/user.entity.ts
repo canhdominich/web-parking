@@ -12,6 +12,9 @@ export class User {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id: number;
 
+  @Column({ type: 'varchar', length: 255 })
+  name: string;
+
   @Column({ type: 'varchar', length: 15 })
   phone: string;
 

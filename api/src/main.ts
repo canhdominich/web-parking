@@ -8,7 +8,7 @@ import { createDataSource } from './data-source';
 import { VehicleModule } from './vehicles/vehicle.module';
 import { VehicleRatePlanModule } from './vehicleRatePlans/vehicle-rate-plan.module';
 import { ParkingLotModule } from './parkingLots/parking-lot.module';
-import { ParkingSlotModule } from './parkingSlot/parking-slot.module';
+import { ParkingSlotModule } from './parkingSlots/parking-slot.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
