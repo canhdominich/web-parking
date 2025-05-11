@@ -7,6 +7,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { createDataSource } from './data-source';
 import { VehicleModule } from './vehicles/vehicle.module';
 import { VehicleRatePlanModule } from './vehicleRatePlans/vehicle-rate-plan.module';
+import { ParkingLotModule } from './parkingLots/parking-lot.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -23,6 +24,7 @@ import { VehicleRatePlanModule } from './vehicleRatePlans/vehicle-rate-plan.modu
     UserModule,
     VehicleModule,
     VehicleRatePlanModule,
+    ParkingLotModule,
   ],
 })
 export class AppModule {}
