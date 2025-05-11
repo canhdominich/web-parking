@@ -7,10 +7,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from 'src/users/user.entity';
-import { Vehicle } from 'src/vehicles/vehicle.entity';
-import { ParkingLot } from 'src/parkingLots/parking-lot.entity';
-import { ParkingSlot } from 'src/parkingSlots/parking-slot.entity';
+import { User } from 'src/user/user.entity';
+import { Vehicle } from 'src/vehicle/vehicle.entity';
+import { ParkingLot } from 'src/parkingLot/parking-lot.entity';
+import { ParkingSlot } from 'src/parkingSlot/parking-slot.entity';
 import { BookingStatus } from 'src/constants/booking.constant';
 import { PaymentStatus } from 'src/constants/payment.constant';
 

@@ -10,7 +10,7 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { VehicleStatus } from 'src/constants/vehicle.constant';
 import { VehicleTypeEnum } from 'src/constants/vehicleType.constant';
-import { User } from '../users/user.entity';
+import { User } from '../user/user.entity';
 
 @Injectable()
 export class VehicleService {

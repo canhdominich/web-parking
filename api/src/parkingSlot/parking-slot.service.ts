@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { ParkingSlot } from './parking-slot.entity';
 import { CreateParkingSlotDto } from './dto/create-parking-slot.dto';
 import { UpdateParkingSlotDto } from './dto/update-parking-slot.dto';
-import { ParkingLot } from '../parkingLots/parking-lot.entity';
+import { ParkingLot } from '../parkingLot/parking-lot.entity';
 import { VehicleTypeEnum } from '../constants/vehicleType.constant';
 
 @Injectable()

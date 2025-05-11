@@ -1,14 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserModule } from './users/user.module';
+import { UserModule } from './user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { createDataSource } from './data-source';
-import { VehicleModule } from './vehicles/vehicle.module';
-import { VehicleRatePlanModule } from './vehicleRatePlans/vehicle-rate-plan.module';
-import { ParkingLotModule } from './parkingLots/parking-lot.module';
-import { ParkingSlotModule } from './parkingSlots/parking-slot.module';
+import { VehicleModule } from './vehicle/vehicle.module';
+import { VehicleRatePlanModule } from './vehicleRatePlan/vehicle-rate-plan.module';
+import { ParkingLotModule } from './parkingLot/parking-lot.module';
+import { ParkingSlotModule } from './parkingSlot/parking-slot.module';
 import { BookingModule } from './booking/booking.module';
 import { PaymentModule } from './payments/payment.module';
 @Module({

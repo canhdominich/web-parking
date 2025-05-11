@@ -1,6 +1,6 @@
 import { VehicleStatus } from 'src/constants/vehicle.constant';
 import { VehicleTypeEnum } from 'src/constants/vehicleType.constant';
-import { User } from 'src/users/user.entity';
+import { User } from 'src/user/user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,

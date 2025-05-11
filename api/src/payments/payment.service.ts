@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Payment } from './payment.entity';
 import { PaymentFilterDto } from './dto/payment-filter.dto';
-import { User } from '../users/user.entity';
+import { User } from '../user/user.entity';
 
 @Injectable()
 export class PaymentService {

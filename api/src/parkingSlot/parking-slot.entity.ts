@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
-import { ParkingLot } from '../parkingLots/parking-lot.entity';
+import { ParkingLot } from '../parkingLot/parking-lot.entity';
 import { ParkingSlotStatus } from '../constants/parkingSlot.constant';
 import { VehicleTypeEnum } from '../constants/vehicleType.constant';
 
