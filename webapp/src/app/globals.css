@@ -191,11 +191,11 @@
     @apply relative font-normal font-outfit z-1 bg-gray-50;
   }
   html {
-    font-size: 20px; /* Base font size */
+    font-size: 16px; /* Base font size */
   }
   
   body {
-    @apply text-2xl; /* Use the base font size we defined in tailwind config */
+    @apply text-xl; /* Use the base font size we defined in tailwind config */
   }
 }
 

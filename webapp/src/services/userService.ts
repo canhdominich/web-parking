@@ -1,4 +1,4 @@
-import httpClient from './httpClient';
+import { httpClient } from "@/lib/httpClient";
 
 export const getUsers = async () => {
     const res = await httpClient.get('/users');

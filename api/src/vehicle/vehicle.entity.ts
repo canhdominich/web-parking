@@ -27,6 +27,12 @@ export class Vehicle {
   @Column({ type: 'varchar', length: 255 })
   licensePlate: string;
 
+  @Column({ type: 'varchar', length: 255 })
+  model: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  color: string;
+
   @Index('IDX_vehicle_type')
   @Column({ type: 'enum', enum: VehicleTypeEnum })
   vehicleType: VehicleTypeEnum;
