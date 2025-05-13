@@ -110,8 +110,8 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number): Promise<User> {
     const user = await this.findOne(id);
-    await this.userRepository.remove(user);
+    return this.userRepository.remove(user);
   }
 }

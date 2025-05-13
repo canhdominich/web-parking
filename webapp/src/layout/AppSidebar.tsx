@@ -37,6 +37,11 @@ const navItems: NavItem[] = [
     path: "/profile",
   },
   {
+    icon: <UserCircleIcon />,
+    name: "Quản lý tài khoản",
+    path: "/user",
+  },
+  {
     icon: <ListIcon />,
     name: "Quản lý xe cá nhân",
     path: "/vehicle",
