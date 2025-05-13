@@ -1,74 +1,57 @@
+"use client";
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import VehicleDataTable from "@/components/vehicle/VehicleDataTable";
-import { Metadata } from "next";
-import React from "react";
+import { getVehicles, Vehicle } from "@/services/vehicleService";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
-export const metadata: Metadata = {
-  title: "Parking Management System",
-  description:
-    "This is Parking Management System",
-};
+export default function VehiclePage() {
+  const headers = [
+    { key: "user", title: "Người dùng" },
+    { key: "vehicleType", title: "Loại xe" },
+    { key: "licensePlate", title: "Biển số xe" },
+    { key: "model", title: "Mẫu xe" },
+    { key: "color", title: "Màu sắc" },
+    { key: "status", title: "Trạng thái" },
+    { key: "action", title: "Hành động" },
+  ];
 
-interface Vihecle {
-  id: string;
-  user: {
-    name: string;
-    phone: string;
-    email: string;
-    role: string;
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchVehicles = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getVehicles();
+      setVehicles(data);
+    } catch {
+      toast.error("Không thể tải danh sách xe");
+    } finally {
+      setIsLoading(false);
+    }
   };
-  licensePlate: string;
-  status: string;
-  vehicleType: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
-// Define the table data using the interface
-const items: Vihecle[] = [
-  {
-    "id": "2",
-    "user": {
-      "name": "Backer",
-      "phone": "0123456789",
-      "email": "john@example.com1",
-      "role": "ParkingGuest",
-    },
-    "licensePlate": "51F-12345",
-    "vehicleType": "Motorbike",
-    "status": "Active",
-    "createdAt": "2025-05-11T03:08:26.093Z",
-    "updatedAt": "2025-05-11T03:08:26.093Z"
-  }
-]
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
 
-const headers = [
-  {
-    key: "user",
-    title: "Chủ sở hữu"
-  },
-  {
-    key: "licensePlate",
-    title: "Biển số xe"
-  },
-  {
-    key: "vehicleType",
-    title: "Loại xe"
-  },
-  {
-    key: "status",
-    title: "Trạng thái"
-  },
-]
-
-export default function Vehicles() {
   return (
     <div>
       <PageBreadcrumb pageTitle="Quản lý xe cá nhân" />
       <div className="space-y-6">
-        <ComponentCard title="Danh sách xe">
-          <VehicleDataTable headers={headers} items={items} />
+        <ComponentCard title="">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          ) : (
+            <VehicleDataTable 
+              headers={headers} 
+              items={vehicles} 
+              onRefresh={fetchVehicles}
+            />
+          )}
         </ComponentCard>
       </div>
     </div>

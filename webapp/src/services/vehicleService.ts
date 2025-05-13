@@ -18,8 +18,8 @@ export interface CreateVehicleDto {
   vehicleType: VehicleType;
   model: string;
   color: string;
-  status: string;
-  userId: number;
+  status?: string;
+  userId?: number;
 }
 
 export interface UpdateVehicleDto {
