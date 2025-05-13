@@ -37,6 +37,11 @@ const navItems: NavItem[] = [
     path: "/parking-lot",
   },
   {
+    icon: <ListIcon />,
+    name: "Quản lý chỗ đỗ",
+    path: "/parking-slot",
+  },
+  {
     icon: <UserCircleIcon />,
     name: "Quản lý tài khoản",
     path: "/user",

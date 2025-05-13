@@ -15,9 +15,9 @@ export const VehicleStatusOptions = [
 ];
 
 export const VehicleTypeOptions = [
-  { value: VehicleType.Car, label: "Car" },
-  { value: VehicleType.Motorbike, label: "Motorbike" },
-  { value: VehicleType.Bicycle, label: "Bicycle" },
+  { value: VehicleType.Car, label: "Ô tô" },
+  { value: VehicleType.Motorbike, label: "Xe máy" },
+  { value: VehicleType.Bicycle, label: "Xe đạp" },
 ];
 
 
