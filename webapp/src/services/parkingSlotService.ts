@@ -35,6 +35,16 @@ export const deleteParkingSlot = async (id: string) => {
     return res.data
 }
 
+export const getParkingSlotByParkingLotId = async (parkingLotId: number) => {
+    const res = await httpClient.get(`/parking-slots/parking-lot/${parkingLotId}`);
+    return res.data;
+};
+
+export const getParkingSlotByVehicleType = async (vehicleType: string) => {
+    const res = await httpClient.get(`/parking-slots/vehicle-type/${vehicleType}`);
+    return res.data;
+};
+
 export interface CreateParkingSlotDto {
     name: string;
     parkingLotId: number;

@@ -1,19 +1,80 @@
-import Booking from "@/components/booking/Booking";
+"use client";
+import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import { Metadata } from "next";
-import React from "react";
+import { getParkingLots, ParkingLot } from "@/services/parkingLotService";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import BookingDataTable from "@/components/booking/Booking";
+import { getUsers } from "@/services/userService";
+import { User } from "@/services/userService";
 
-export const metadata: Metadata = {
-  title: "Next.js Calender | TailAdmin - Next.js Dashboard Template",
-  description:
-    "This is Next.js Calender page for TailAdmin  Tailwind CSS Admin Dashboard Template",
-  // other metadata
-};
-export default function page() {
+export default function ParkingSlotPage() {
+  const [parkingLots, setParkingLots] = useState<ParkingLot[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>([]);
+
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getUsers();
+      setUsers([
+        {
+          id: 0,
+          name: "Tên khách",
+        },
+        ...data,
+      ]);
+    } catch {
+      toast.error("Không thể tải danh sách bãi xe");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchParkingLots = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getParkingLots();
+      setParkingLots([
+        {
+          id: 0,
+          name: "Tên bãi xe",
+        },
+        ...data,
+      ]);
+    } catch {
+      toast.error("Không thể tải danh sách bãi xe");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchParkingLots();
+    fetchUsers();
+  }, []);
+
   return (
     <div>
       <PageBreadcrumb pageTitle="Đặt chỗ giữ xe" />
-      <Booking />
+      <div className="space-y-6">
+        <ComponentCard title="">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          ) : (
+            <BookingDataTable
+              parkingLots={parkingLots}
+              users={users}
+              onRefresh={fetchParkingLots}
+              bookings={[]}
+              vehicles={[]}
+              parkingSlots={[]}
+            />
+          )}
+        </ComponentCard>
+      </div>
     </div>
   );
 }
