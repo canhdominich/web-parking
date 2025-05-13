@@ -32,9 +32,9 @@ const navItems: NavItem[] = [
     path: "/booking",
   },
   {
-    icon: <UserCircleIcon />,
-    name: "Trang cá nhân",
-    path: "/profile",
+    icon: <ListIcon />,
+    name: "Quản lý bãi xe",
+    path: "/parking-lot",
   },
   {
     icon: <UserCircleIcon />,
@@ -49,6 +49,11 @@ const navItems: NavItem[] = [
   {
     icon: <ListIcon />,
     name: "Lịch sử thanh toán",
+    path: "/profile",
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "Trang cá nhân",
     path: "/profile",
   },
   {
