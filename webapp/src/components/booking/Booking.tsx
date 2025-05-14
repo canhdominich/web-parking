@@ -12,7 +12,7 @@ import {
 import { useModal } from "@/hooks/useModal";
 import { Modal } from "@/components/ui/modal";
 import Select from "../form/Select";
-import { CreateBookingDto, UpdateBookingDto, createBooking, updateBooking, deleteBooking } from "@/services/bookingService";
+import { CreateBookingDto, UpdateBookingDto, createBooking, updateBooking, deleteBooking, getBookingById } from "@/services/bookingService";
 import { ParkingLot } from "@/services/parkingLotService";
 import { ChevronDownIcon } from "@/icons";
 import { getParkingSlotByParkingLotId, ParkingSlot } from "@/services/parkingSlotService";
@@ -22,12 +22,27 @@ import { Vehicle } from "@/services/vehicleService";
 import { getVehiclesByUser } from "@/services/vehicleService";
 import toast from "react-hot-toast";
 import { Booking } from "@/services/bookingService";
+import { BookingStatus } from "@/constants/booking.constant";
+import moment from "moment";
+import axios from "axios";
 
 interface CalendarEvent extends EventInput {
+  id: string;
+  title: string;
+  start: string;
   extendedProps: {
     calendar: string;
   };
 }
+
+const mapBookingToEvent = (booking: Booking): CalendarEvent => ({
+  id: booking.id.toString(),
+  title: booking.vehicle?.licensePlate || "Không có biển số",
+  start: moment(booking.checkinTime).format("YYYY-MM-DD"),
+  extendedProps: {
+    calendar: getBookingStatusColor(booking.status || "")
+  }
+});
 
 const renderEventContent = (eventInfo: EventContentArg) => {
   const colorClass = `fc-bg-${eventInfo.event.extendedProps.calendar.toLowerCase()}`;
@@ -51,6 +66,17 @@ interface BookingProps {
   parkingSlots: ParkingSlot[];
 }
 
+const getBookingStatusColor = (status: string): string => {
+  const statusColorMap: Record<string, string> = {
+    [BookingStatus.Booked]: "Warning",
+    [BookingStatus.CheckedIn]: "Primary",
+    [BookingStatus.CheckedOut]: "Success",
+    [BookingStatus.Cancelled]: "Danger"
+  };
+
+  return statusColorMap[status] || "Primary";
+};
+
 export default function BookingDataTable({ onRefresh, bookings, users, vehicles: initialVehicles, parkingLots, parkingSlots: initialParkingSlots }: BookingProps) {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,6 +90,8 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
   const [parkingSlots, setParkingSlots] = useState<ParkingSlot[]>(initialParkingSlots);
   const { isOpen, openModal, closeModal } = useModal();
+
+  const [events, setEvents] = useState<CalendarEvent[]>(bookings.map(mapBookingToEvent));
 
   // Reset form when modal closes
   useEffect(() => {
@@ -119,13 +147,24 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
     }
   }, [selectedBooking]);
 
+  // Update events when bookings change
+  useEffect(() => {
+    setEvents(bookings.map(mapBookingToEvent));
+  }, [bookings]);
+
   const handleSelectUserChange = async (value: string) => {
     const userId = parseInt(value);
     setFormData({ ...formData, userId, vehicleId: 0 }); // Reset vehicleId when user changes
 
     try {
       const userVehicles = await getVehiclesByUser(userId);
-      setVehicles(userVehicles);
+      setVehicles([
+        {
+          id: 0,
+          licensePlate: "Biển số xe",
+        },
+        ...userVehicles,
+      ]);
     } catch (error) {
       toast.error("Không thể lấy danh sách phương tiện");
       setVehicles([]);
@@ -142,7 +181,13 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
 
     try {
       const slots = await getParkingSlotByParkingLotId(parkingLotId);
-      setParkingSlots(slots);
+      setParkingSlots([
+        {
+          id: 0,
+          name: "Vị trí đỗ xe",
+        },
+        ...slots,
+      ]);
     } catch (error) {
       toast.error("Không thể lấy danh sách chỗ đỗ");
       setParkingSlots([]);
@@ -151,11 +196,6 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
 
   const handleSelectParkingSlotChange = (value: string) => {
     setFormData({ ...formData, slotId: parseInt(value) });
-  };
-
-  const handleEdit = (Booking: Booking) => {
-    setSelectedBooking(Booking);
-    openModal();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -190,82 +230,42 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
       setIsSubmitting(true);
       await deleteBooking(id);
       toast.success("Xóa đặt chỗ thành công");
+      closeModal();
       onRefresh();
-    } catch {
-      toast.error("Không thể xóa đặt chỗ");
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data) {
+        const serverError = error.response.data;
+        toast.error(serverError.message || "Không thể xóa đặt chỗ");
+      } else {
+        toast.error("Không thể xóa đặt chỗ");
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
-    null
-  );
-
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-
   const calendarRef = useRef<FullCalendar>(null);
 
-  useEffect(() => {
-    // Initialize with some events
-    setEvents([
-      {
-        id: "1",
-        title: "Event Conf.",
-        start: new Date().toISOString().split("T")[0],
-        extendedProps: { calendar: "Danger" },
-      },
-      {
-        id: "2",
-        title: "Meeting",
-        start: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-        extendedProps: { calendar: "Success" },
-      },
-      {
-        id: "3",
-        title: "Workshop",
-        start: new Date(Date.now() + 172800000).toISOString().split("T")[0],
-        end: new Date(Date.now() + 259200000).toISOString().split("T")[0],
-        extendedProps: { calendar: "Primary" },
-      },
-    ]);
-  }, []);
-
-  const handleEventClick = (clickInfo: EventClickArg) => {
+  const handleEventClick = async (clickInfo: EventClickArg) => {
     const event = clickInfo.event;
-    setSelectedEvent(event as unknown as CalendarEvent);
-    openModal();
-  };
+    const bookingId = parseInt(event.id);
 
-  const handleAddOrUpdateBooking = () => {
-    if (selectedEvent) {
-      // Update existing event
-      setEvents((prevEvents) =>
-        prevEvents.map((event) =>
-          event.id === selectedEvent.id
-            ? {
-              ...event,
-              title: formData.vehicleId.toString(),
-              start: formData.slotId.toString(),
-              end: formData.slotId.toString(),
-              extendedProps: { calendar: formData.userId.toString() },
-            }
-            : event
-        )
-      );
-    } else {
-      // Add new event
-      const newEvent: CalendarEvent = {
-        id: Date.now().toString(),
-        title: formData.vehicleId.toString(),
-        start: formData.slotId.toString(),
-        end: formData.slotId.toString(),
-        allDay: true,
-        extendedProps: { calendar: formData.userId.toString() },
-      };
-      setEvents((prevEvents) => [...prevEvents, newEvent]);
+    try {
+      const booking = await getBookingById(bookingId);
+      if (booking) {
+        setSelectedBooking(booking);
+        setFormData({
+          userId: booking.userId,
+          vehicleId: booking.vehicleId,
+          parkingLotId: booking.parkingLotId,
+          slotId: booking.slotId,
+          checkinTime: moment(booking.checkinTime).format("YYYY-MM-DD HH:mm:00"),
+        });
+        openModal();
+      }
+    } catch (error) {
+      toast.error("Không thể lấy thông tin đặt chỗ");
     }
-    closeModal();
   };
 
   return (
@@ -300,7 +300,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
         <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
           <div>
             <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
-              {selectedBooking ? "Chỉnh sửa đặt chỗ" : "Đặt chỗ"}
+              {selectedBooking ? "Chi tiết đặt chỗ" : "Đặt chỗ"}
             </h5>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Trải nghiệm ngay sự tiện lợi của đặt chỗ giữ xe thông minh – tiết kiệm thời gian, giảm stress!
@@ -314,9 +314,22 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
                   label="Ngày muốn đặt"
                   placeholder="Select a date"
                   onChange={(dates, currentDateString) => {
-                    // Handle your logic
                     console.log({ dates, currentDateString });
+                    if (dates && dates[0]) {
+                      const date = dates[0];
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const day = String(date.getDate()).padStart(2, '0');
+                      const hours = String(date.getHours()).padStart(2, '0');
+                      const minutes = String(date.getMinutes()).padStart(2, '0');
+                      const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:00`;
+                      setFormData(prev => ({
+                        ...prev,
+                        checkinTime: formattedDate
+                      }));
+                    }
                   }}
+                  defaultDate={moment(formData.checkinTime).format("YYYY-MM-DD HH:mm")}
                 />
               </div>
             </div>
@@ -407,14 +420,26 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
             >
               Đóng
             </button>
-            <button
-              onClick={handleSubmit}
-              type="button"
-              disabled={isSubmitting}
-              className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-            >
-              {isSubmitting ? "Đang xử lý..." : selectedBooking ? "Cập nhật" : "Thêm mới"}
-            </button>
+
+            {selectedBooking && selectedBooking.id ? (
+              <button
+                onClick={() => handleDelete(selectedBooking.id)}
+                type="button"
+                disabled={isSubmitting}
+                className="btn btn-danger btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
+              >
+                Xóa
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                type="button"
+                disabled={isSubmitting}
+                className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+              >
+                {isSubmitting ? "Đang xử lý..." : selectedBooking ? "Cập nhật" : "Thêm mới"}
+              </button>
+            )}
           </div>
         </div>
       </Modal>

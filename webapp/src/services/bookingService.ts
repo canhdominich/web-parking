@@ -56,10 +56,55 @@ export interface UpdateBookingDto {
 export interface Booking {
     id: number;
     userId: number;
+    user?: {
+        id: number;
+        name: string;
+        phone: string;
+        email: string;
+        password: string;
+        role: string;
+        createdAt: Date;
+        updatedAt: Date;
+    };
     vehicleId: number;
+    vehicle?: {
+        id: number;
+        userId: number;
+        licensePlate: string;
+        model: string;
+        color: string;
+        vehicleType: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+    };
     parkingLotId: number;
+    parkingLot?: {
+        id: number;
+        name: string;
+        location: string;
+        openTime: string;
+        closeTime: string;
+        totalSlots: number;
+        createdAt: Date;
+        updatedAt: Date;
+    };
     slotId: number;
+    slot?: {
+        id: number;
+        name: string;
+        parkingLotId: number;
+        vehicleType: string;
+        status: string;
+        lastUpdated: Date;
+        createdAt: Date;
+        updatedAt: Date;
+    };
     checkinTime: string;
+    checkoutTime?: string | null;
+    status?: string;
+    totalPrice?: string;
+    paymentStatus?: string;
     createdAt: Date;
     updatedAt: Date;
 }

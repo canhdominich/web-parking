@@ -29,7 +29,7 @@ export default function DatePicker({
       static: true,
       monthSelectorType: "static",
       enableTime: true,
-      dateFormat: "Y-m-d H:m",
+      dateFormat: "Y-m-d H:i:00",
       time_24hr: true,
       defaultDate,
       onChange,

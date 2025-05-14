@@ -7,12 +7,14 @@ import { toast } from "react-hot-toast";
 import BookingDataTable from "@/components/booking/Booking";
 import { getUsers } from "@/services/userService";
 import { User } from "@/services/userService";
+import { getBookings } from "@/services/bookingService";
+import { Booking } from "@/services/bookingService";
 
 export default function ParkingSlotPage() {
   const [parkingLots, setParkingLots] = useState<ParkingLot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
-
+  const [bookings, setBookings] = useState<Booking[]>([]);    
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
@@ -49,10 +51,29 @@ export default function ParkingSlotPage() {
     }
   };
 
+  const fetchBookings = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getBookings();
+      setBookings(data);
+    } catch {
+      toast.error("Không thể tải danh sách bãi xe");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchParkingLots();
     fetchUsers();
+    fetchBookings();
   }, []);
+
+  const onRefresh = () => {
+    fetchParkingLots();
+    fetchUsers();
+    fetchBookings();
+  }
 
   return (
     <div>
@@ -67,8 +88,8 @@ export default function ParkingSlotPage() {
             <BookingDataTable
               parkingLots={parkingLots}
               users={users}
-              onRefresh={fetchParkingLots}
-              bookings={[]}
+              onRefresh={onRefresh}
+              bookings={bookings}
               vehicles={[]}
               parkingSlots={[]}
             />
