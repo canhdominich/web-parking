@@ -125,12 +125,12 @@ export default function SignUpForm() {
               <div className="space-y-5">
                 <div>
                   <Label>
-                    Tên khách<span className="text-error-500">*</span>
-                  </Label>
-                  <Input
-                    type="text"
-                    id="name"
-                    name="name"
+                    Tên khách hàng<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      id="name"
+                      name="name"
                     value={formData.name}
                     onChange={handleChange}
                     required

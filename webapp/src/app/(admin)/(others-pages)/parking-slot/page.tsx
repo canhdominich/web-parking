@@ -12,7 +12,8 @@ export default function ParkingSlotPage() {
     { key: "name", title: "Tên chỗ đỗ" },
     { key: "vehicleType", title: "Loại xe" },
     { key: "status", title: "Trạng thái" },
-    { key: "parkingLotId", title: "bãi xe" },
+    { key: "parkingLotId", title: "Bãi xe" },
+    { key: "address", title: "Địa chỉ" },
     { key: "action", title: "Hành động" },
   ];
 
@@ -36,7 +37,13 @@ export default function ParkingSlotPage() {
     try {
       setIsLoading(true);
       const data = await getParkingLots();
-      setParkingLots(data);
+      setParkingLots([
+        {
+          id: 0,
+          name: "Tên bãi xe",
+        },
+        ...data,
+      ]);
     } catch {
       toast.error("Không thể tải danh sách bãi xe");
     } finally {

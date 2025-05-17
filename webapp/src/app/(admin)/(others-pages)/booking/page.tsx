@@ -22,7 +22,7 @@ export default function ParkingSlotPage() {
       setUsers([
         {
           id: 0,
-          name: "Tên khách",
+          name: "Tên khách hàng",
         },
         ...data,
       ]);

@@ -261,7 +261,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
           slotId: booking.slotId,
           checkinTime: moment(booking.checkinTime).format("YYYY-MM-DD HH:mm:00"),
         });
-        openModal();
+    openModal();
       }
     } catch (error) {
       toast.error("Không thể lấy thông tin đặt chỗ");
@@ -431,14 +431,14 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
                 Xóa
               </button>
             ) : (
-              <button
+            <button
                 onClick={handleSubmit}
-                type="button"
+              type="button"
                 disabled={isSubmitting}
-                className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-              >
+              className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+            >
                 {isSubmitting ? "Đang xử lý..." : selectedBooking ? "Cập nhật" : "Thêm mới"}
-              </button>
+            </button>
             )}
           </div>
         </div>

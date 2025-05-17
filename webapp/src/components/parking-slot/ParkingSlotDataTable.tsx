@@ -11,7 +11,6 @@ import { BasicTableProps, Header } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import { CreateParkingSlotDto, createParkingSlot, deleteParkingSlot, updateParkingSlot, ParkingSlot, UpdateParkingSlotDto } from "@/services/parkingSlotService";
-import toast from "react-hot-toast";
 import Badge from "../ui/badge/Badge";
 import { ParkingSlotStatus, ParkingSlotStatusOptions } from "@/constants/common";
 import { VehicleType, VehicleTypeOptions } from "@/constants/vehicle.constant";
@@ -97,15 +96,15 @@ export default function ParkingSlotDataTable({ headers, items, onRefresh, parkin
       setIsSubmitting(true);
       if (selectedParkingSlot?.id) {
         await updateParkingSlot(selectedParkingSlot.id.toString(), formData as UpdateParkingSlotDto);
-        toast.success("Cập nhật chỗ đỗ thành công");
+        alert("Cập nhật chỗ đỗ thành công");
       } else {
         await createParkingSlot(formData as CreateParkingSlotDto);
-        toast.success("Thêm chỗ đỗ thành công");
+        alert("Thêm chỗ đỗ thành công");
       }
       closeModal();
       onRefresh();
     } catch {
-      toast.error(selectedParkingSlot?.id ? "Không thể cập nhật chỗ đỗ" : "Không thể thêm chỗ đỗ");
+      alert(selectedParkingSlot?.id ? "Không thể cập nhật chỗ đỗ" : "Không thể thêm chỗ đỗ");
     } finally {
       setIsSubmitting(false);
     }
@@ -120,10 +119,10 @@ export default function ParkingSlotDataTable({ headers, items, onRefresh, parkin
     try {
       setIsSubmitting(true);
       await deleteParkingSlot(id.toString());
-      toast.success("Xóa chỗ đỗ thành công");
+      alert("Xóa chỗ đỗ thành công");
       onRefresh();
     } catch {
-      toast.error("Không thể xóa chỗ đỗ");
+      alert("Không thể xóa chỗ đỗ");
     } finally {
       setIsSubmitting(false);
     }
@@ -187,7 +186,10 @@ export default function ParkingSlotDataTable({ headers, items, onRefresh, parkin
                     </Badge>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {parkingLots.find(lot => lot.id === item.parkingLotId)?.name} - {parkingLots.find(lot => lot.id === item.parkingLotId)?.location}
+                    {parkingLots.find(lot => lot.id === item.parkingLotId)?.name} ({parkingLots.find(lot => lot.id === item.parkingLotId)?.totalSlots} chỗ)
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    {parkingLots.find(lot => lot.id === item.parkingLotId)?.location}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="flex items-center gap-3">
@@ -256,8 +258,10 @@ export default function ParkingSlotDataTable({ headers, items, onRefresh, parkin
                   <div className="relative">
                     <Select
                       value={formData.vehicleType}
-                      options={VehicleTypeOptions}
-                      placeholder="Chọn loại phương tiện"
+                      options={[{
+                        value: "",
+                        label: "Loại phương tiện",
+                      }, ...VehicleTypeOptions]}
                       onChange={handleSelectVehicleTypeChange}
                       className="dark:bg-dark-900"
                     />
@@ -270,8 +274,10 @@ export default function ParkingSlotDataTable({ headers, items, onRefresh, parkin
                   <div className="relative">
                     <Select
                       value={formData.status}
-                      options={ParkingSlotStatusOptions}
-                      placeholder="Chọn trạng thái"
+                      options={[{
+                        value: "",
+                        label: "Trạng thái chỗ đỗ",
+                      }, ...ParkingSlotStatusOptions]}
                       onChange={handleSelectStatusChange}
                       className="dark:bg-dark-900"
                     />

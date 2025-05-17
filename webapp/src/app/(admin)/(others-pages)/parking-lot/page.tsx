@@ -12,7 +12,9 @@ export default function ParkingLotPage() {
     { key: "location", title: "Vị trí" },
     { key: "openTime", title: "Giờ mở cửa" },
     { key: "closeTime", title: "Giờ đóng cửa" },
-    { key: "totalSlots", title: "Số lượng chỗ đỗ" },
+    { key: "totalSlots", title: "Tổng chỗ" },
+    { key: "checkedInCount", title: "Chỗ đang gửi" },
+    { key: "totalEmptySlots", title: "Chỗ trống" },
     { key: "action", title: "Hành động" },
   ];
 
@@ -47,7 +49,7 @@ export default function ParkingLotPage() {
           ) : (
             <ParkingLotDataTable 
               headers={headers} 
-              items={parkingLots} 
+              items={parkingLots as (ParkingLot & { checkedInCount: number; totalEmptySlots: number })[]} 
               onRefresh={fetchParkingLots}
             />
           )}

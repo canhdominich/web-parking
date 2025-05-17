@@ -7,20 +7,26 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-  Query,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { VehicleService } from './vehicle.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Vehicle } from './vehicle.entity';
 import { VehicleStatus } from 'src/constants/vehicle.constant';
 import { VehicleTypeEnum } from 'src/constants/vehicleType.constant';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../constants/user.constant';
 
 @ApiTags('vehicles')
 @Controller('vehicles')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class VehicleController {
-  constructor(private readonly vehicleService: VehicleService) {}
+  constructor(private readonly vehicleService: VehicleService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new vehicle' })
@@ -37,7 +43,11 @@ export class VehicleController {
     status: 404,
     description: 'User not found.',
   })
-  create(@Body() createVehicleDto: CreateVehicleDto) {
+  @Roles(UserRole.Admin, UserRole.ParkingGuest)
+  create(@Body() createVehicleDto: CreateVehicleDto, @Request() req) {
+    if (req.user.role !== UserRole.Admin) {
+      createVehicleDto.userId = req.user.id;
+    }
     return this.vehicleService.create(createVehicleDto);
   }
 
@@ -48,8 +58,9 @@ export class VehicleController {
     description: 'Return all vehicles.',
     type: [Vehicle],
   })
-  findAll() {
-    return this.vehicleService.findAll();
+  @Roles(UserRole.Admin, UserRole.ParkingStaff, UserRole.ParkingGuest)
+  findAll(@Request() req) {
+    return this.vehicleService.findAll(req.user);
   }
 
   @Get('active')
@@ -59,7 +70,11 @@ export class VehicleController {
     description: 'Return all active vehicles.',
     type: [Vehicle],
   })
-  findActive() {
+  @Roles(UserRole.Admin, UserRole.ParkingStaff, UserRole.ParkingGuest)
+  findActive(@Request() req) {
+    if (req.user.role !== UserRole.Admin) {
+      return this.vehicleService.findActiveByUserId(req.user.id);
+    }
     return this.vehicleService.findActive();
   }
 
@@ -70,6 +85,7 @@ export class VehicleController {
     description: 'Return all inactive vehicles.',
     type: [Vehicle],
   })
+  @Roles(UserRole.Admin)
   findInactive() {
     return this.vehicleService.findInactive();
   }
@@ -81,7 +97,11 @@ export class VehicleController {
     description: 'Return vehicles of the specified type.',
     type: [Vehicle],
   })
-  findByVehicleType(@Param('vehicleType') vehicleType: VehicleTypeEnum) {
+  @Roles(UserRole.Admin, UserRole.ParkingStaff, UserRole.ParkingGuest)
+  findByVehicleType(@Param('vehicleType') vehicleType: VehicleTypeEnum, @Request() req) {
+    if (req.user.role !== UserRole.Admin) {
+      return this.vehicleService.findByVehicleTypeAndUserId(vehicleType, req.user.id);
+    }
     return this.vehicleService.findByVehicleType(vehicleType);
   }
 
@@ -92,7 +112,11 @@ export class VehicleController {
     description: 'Return active vehicles of the specified type.',
     type: [Vehicle],
   })
-  findActiveByVehicleType(@Param('vehicleType') vehicleType: VehicleTypeEnum) {
+  @Roles(UserRole.Admin, UserRole.ParkingStaff, UserRole.ParkingGuest)
+  findActiveByVehicleType(@Param('vehicleType') vehicleType: VehicleTypeEnum, @Request() req) {
+    if (req.user.role !== UserRole.Admin) {
+      return this.vehicleService.findActiveByVehicleTypeAndUserId(vehicleType, req.user.id);
+    }
     return this.vehicleService.findActiveByVehicleType(vehicleType);
   }
 
@@ -104,8 +128,9 @@ export class VehicleController {
     type: [Vehicle],
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  findByUserId(@Param('userId', ParseIntPipe) userId: number) {
-    return this.vehicleService.findByUserId(userId);
+  @Roles(UserRole.Admin, UserRole.ParkingStaff, UserRole.ParkingGuest)
+  findByUserId(@Param('userId', ParseIntPipe) userId: number, @Request() req) {
+    return this.vehicleService.findByUserId(userId, req.user);
   }
 
   @Get(':id')
@@ -116,8 +141,9 @@ export class VehicleController {
     type: Vehicle,
   })
   @ApiResponse({ status: 404, description: 'Vehicle not found.' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.vehicleService.findOne(id);
+  @Roles(UserRole.Admin, UserRole.ParkingStaff, UserRole.ParkingGuest)
+  findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.vehicleService.findOne(id, req.user);
   }
 
   @Get('license-plate/:licensePlate')
@@ -128,8 +154,9 @@ export class VehicleController {
     type: Vehicle,
   })
   @ApiResponse({ status: 404, description: 'Vehicle not found.' })
-  findByLicensePlate(@Param('licensePlate') licensePlate: string) {
-    return this.vehicleService.findByLicensePlate(licensePlate);
+  @Roles(UserRole.Admin, UserRole.ParkingStaff, UserRole.ParkingGuest)
+  findByLicensePlate(@Param('licensePlate') licensePlate: string, @Request() req) {
+    return this.vehicleService.findByLicensePlate(licensePlate, req.user);
   }
 
   @Patch(':id')
@@ -144,11 +171,13 @@ export class VehicleController {
     status: 400,
     description: 'Invalid input or license plate already exists.',
   })
+  @Roles(UserRole.Admin, UserRole.ParkingGuest)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateVehicleDto: UpdateVehicleDto,
+    @Request() req,
   ) {
-    return this.vehicleService.update(id, updateVehicleDto);
+    return this.vehicleService.update(id, updateVehicleDto, req.user);
   }
 
   @Patch(':id/status')
@@ -159,6 +188,7 @@ export class VehicleController {
     type: Vehicle,
   })
   @ApiResponse({ status: 404, description: 'Vehicle not found.' })
+  @Roles(UserRole.Admin)
   updateStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body('status') status: VehicleStatus,
@@ -174,6 +204,7 @@ export class VehicleController {
     type: Vehicle,
   })
   @ApiResponse({ status: 404, description: 'Vehicle not found.' })
+  @Roles(UserRole.Admin)
   activate(@Param('id', ParseIntPipe) id: number) {
     return this.vehicleService.activate(id);
   }
@@ -186,6 +217,7 @@ export class VehicleController {
     type: Vehicle,
   })
   @ApiResponse({ status: 404, description: 'Vehicle not found.' })
+  @Roles(UserRole.Admin)
   deactivate(@Param('id', ParseIntPipe) id: number) {
     return this.vehicleService.deactivate(id);
   }
@@ -194,7 +226,8 @@ export class VehicleController {
   @ApiOperation({ summary: 'Delete a vehicle' })
   @ApiResponse({ status: 200, description: 'Vehicle successfully deleted.' })
   @ApiResponse({ status: 404, description: 'Vehicle not found.' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.vehicleService.remove(id);
+  @Roles(UserRole.Admin, UserRole.ParkingGuest)
+  remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.vehicleService.remove(id, req.user);
   }
 }

@@ -11,11 +11,10 @@ import { BasicTableProps, Header } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import { CreateParkingLotDto, createParkingLot, deleteParkingLot, updateParkingLot, ParkingLot, UpdateParkingLotDto } from "@/services/parkingLotService";
-import toast from "react-hot-toast";
 
 interface ParkingLotDataTableProps extends BasicTableProps {
   onRefresh: () => void;
-  items: ParkingLot[];
+  items: (ParkingLot & { checkedInCount: number; totalEmptySlots: number })[];
   headers: Header[];
 }
 
@@ -71,15 +70,15 @@ export default function ParkingLotDataTable({ headers, items, onRefresh }: Parki
       setIsSubmitting(true);
       if (selectedParkingLot?.id) {
         await updateParkingLot(selectedParkingLot.id.toString(), formData as UpdateParkingLotDto);
-        toast.success("Cập nhật bãi xe thành công");
+        alert("Cập nhật bãi xe thành công");
       } else {
         await createParkingLot(formData as CreateParkingLotDto);
-        toast.success("Thêm bãi xe thành công");
+        alert("Thêm bãi xe thành công");
       }
       closeModal();
       onRefresh();
     } catch {
-      toast.error(selectedParkingLot?.id ? "Không thể cập nhật bãi xe" : "Không thể thêm bãi xe");
+      alert(selectedParkingLot?.id ? "Không thể cập nhật bãi xe" : "Không thể thêm bãi xe");
     } finally {
       setIsSubmitting(false);
     }
@@ -94,10 +93,10 @@ export default function ParkingLotDataTable({ headers, items, onRefresh }: Parki
     try {
       setIsSubmitting(true);
       await deleteParkingLot(id.toString());
-      toast.success("Xóa bãi xe thành công");
+      alert("Xóa bãi xe thành công");
       onRefresh();
     } catch {
-      toast.error("Không thể xóa bãi xe");
+      alert("Không thể xóa bãi xe");
     } finally {
       setIsSubmitting(false);
     }
@@ -120,11 +119,11 @@ export default function ParkingLotDataTable({ headers, items, onRefresh }: Parki
             {/* Table Header */}
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
-                {headers.map((header) => (
+                {headers.map((header, index) => (
                   <TableCell
                     key={header.key}
                     isHeader
-                    className="px-5 py-3 font-medium text-start text-theme-sm dark:text-gray-400"
+                    className={index === 0 ? "px-5 py-3 font-medium text-start text-theme-sm dark:text-gray-400" : "px-5 py-3 font-medium text-center text-theme-sm dark:text-gray-400"}
                   >
                     {header.title}
                   </TableCell>
@@ -134,9 +133,9 @@ export default function ParkingLotDataTable({ headers, items, onRefresh }: Parki
 
             {/* Table Body */}
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {items.map((item: ParkingLot) => (
+              {items.map((item: ParkingLot & { checkedInCount: number; totalEmptySlots: number }) => (
                 <TableRow key={item.id}>
-                  <TableCell className="px-5 py-4 sm:px-6 text-start">
+                  <TableCell className="px-5 py-4 sm:px-6 text-center">
                     <div className="flex items-center gap-3">
                       <div>
                         <span className="block text-gray-500 text-theme-sm dark:text-gray-400">
@@ -145,19 +144,25 @@ export default function ParkingLotDataTable({ headers, items, onRefresh }: Parki
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                     {item.location}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                     {item.openTime}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                     {item.closeTime}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                     {item.totalSlots}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+                    {item.checkedInCount}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+                    {item.totalEmptySlots}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-end text-theme-sm dark:text-gray-400">
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => handleEdit(item)}
@@ -222,6 +227,7 @@ export default function ParkingLotDataTable({ headers, items, onRefresh }: Parki
                     id="openTime"
                     type="text"
                     value={formData.openTime}
+                    placeholder="HH:MM"
                     onChange={(e) => setFormData({ ...formData, openTime: e.target.value })}
                     className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                   />
@@ -234,6 +240,7 @@ export default function ParkingLotDataTable({ headers, items, onRefresh }: Parki
                     id="closeTime"
                     type="text"
                     value={formData.closeTime}
+                    placeholder="HH:MM"
                     onChange={(e) => setFormData({ ...formData, closeTime: e.target.value })}
                     className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                   />

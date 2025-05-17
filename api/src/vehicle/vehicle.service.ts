@@ -2,15 +2,17 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Vehicle } from './vehicle.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { VehicleStatus } from 'src/constants/vehicle.constant';
-import { VehicleTypeEnum } from 'src/constants/vehicleType.constant';
+import { VehicleStatus } from '../constants/vehicle.constant';
+import { VehicleTypeEnum } from '../constants/vehicleType.constant';
 import { User } from '../user/user.entity';
+import { UserRole } from '../constants/user.constant';
 
 @Injectable()
 export class VehicleService {
@@ -21,8 +23,18 @@ export class VehicleService {
     private readonly userRepository: Repository<User>,
   ) {}
 
+  private checkVehicleOwnership(
+    vehicle: Vehicle,
+    user: User,
+  ): void {
+    if (user.role !== UserRole.Admin && vehicle.userId !== user.id) {
+      throw new ForbiddenException(
+        'You do not have permission to access this vehicle',
+      );
+    }
+  }
+
   async create(createVehicleDto: CreateVehicleDto): Promise<Vehicle> {
-    // Check if user exists
     const user = await this.userRepository.findOne({
       where: { id: createVehicleDto.userId },
     });
@@ -33,7 +45,6 @@ export class VehicleService {
       );
     }
 
-    // Check if license plate already exists
     const existingVehicle = await this.vehicleRepository.findOne({
       where: { licensePlate: createVehicleDto.licensePlate },
     });
@@ -46,7 +57,13 @@ export class VehicleService {
     return this.vehicleRepository.save(vehicle);
   }
 
-  async findAll(): Promise<Vehicle[]> {
+  async findAll(user?: User): Promise<Vehicle[]> {
+    if (user && user.role !== UserRole.Admin) {
+      return this.vehicleRepository.find({
+        where: { userId: user.id },
+        relations: ['user'],
+      });
+    }
     return this.vehicleRepository.find({
       relations: ['user'],
     });
@@ -55,6 +72,16 @@ export class VehicleService {
   async findActive(): Promise<Vehicle[]> {
     return this.vehicleRepository.find({
       where: { status: VehicleStatus.Active },
+      relations: ['user'],
+    });
+  }
+
+  async findActiveByUserId(userId: number): Promise<Vehicle[]> {
+    return this.vehicleRepository.find({
+      where: {
+        userId,
+        status: VehicleStatus.Active,
+      },
       relations: ['user'],
     });
   }
@@ -73,17 +100,46 @@ export class VehicleService {
     });
   }
 
-  async findActiveByVehicleType(vehicleType: VehicleTypeEnum): Promise<Vehicle[]> {
+  async findActiveByVehicleType(
+    vehicleType: VehicleTypeEnum,
+  ): Promise<Vehicle[]> {
     return this.vehicleRepository.find({
-      where: { 
+      where: {
         vehicleType,
-        status: VehicleStatus.Active 
+        status: VehicleStatus.Active,
       },
       relations: ['user'],
     });
   }
 
-  async findOne(id: number): Promise<Vehicle> {
+  async findActiveByVehicleTypeAndUserId(
+    vehicleType: VehicleTypeEnum,
+    userId: number,
+  ): Promise<Vehicle[]> {
+    return this.vehicleRepository.find({
+      where: {
+        vehicleType,
+        userId,
+        status: VehicleStatus.Active,
+      },
+      relations: ['user'],
+    });
+  }
+
+  async findByVehicleTypeAndUserId(
+    vehicleType: VehicleTypeEnum,
+    userId: number,
+  ): Promise<Vehicle[]> {
+    return this.vehicleRepository.find({
+      where: {
+        vehicleType,
+        userId,
+      },
+      relations: ['user'],
+    });
+  }
+
+  async findOne(id: number, user: User): Promise<Vehicle> {
     const vehicle = await this.vehicleRepository.findOne({
       where: { id },
       relations: ['user'],
@@ -93,10 +149,11 @@ export class VehicleService {
       throw new NotFoundException(`Vehicle with ID ${id} not found`);
     }
 
+    this.checkVehicleOwnership(vehicle, user);
     return vehicle;
   }
 
-  async findByLicensePlate(licensePlate: string): Promise<Vehicle> {
+  async findByLicensePlate(licensePlate: string, user: User): Promise<Vehicle> {
     const vehicle = await this.vehicleRepository.findOne({
       where: { licensePlate },
       relations: ['user'],
@@ -108,16 +165,22 @@ export class VehicleService {
       );
     }
 
+    this.checkVehicleOwnership(vehicle, user);
     return vehicle;
   }
 
-  async findByUserId(userId: number): Promise<Vehicle[]> {
-    // Check if user exists
-    const user = await this.userRepository.findOne({
+  async findByUserId(userId: number, user?: User): Promise<Vehicle[]> {
+    if (user && user.role !== UserRole.Admin && user.id !== userId) {
+      throw new ForbiddenException(
+        "You do not have permission to view other users' vehicles",
+      );
+    }
+
+    const userExists = await this.userRepository.findOne({
       where: { id: userId },
     });
 
-    if (!user) {
+    if (!userExists) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
@@ -130,23 +193,26 @@ export class VehicleService {
   async update(
     id: number,
     updateVehicleDto: UpdateVehicleDto,
+    user: User,
   ): Promise<Vehicle> {
-    const vehicle = await this.findOne(id);
+    const vehicle = await this.findOne(id, user);
 
-    // If userId is being updated, check if the new user exists
     if (updateVehicleDto.userId && updateVehicleDto.userId !== vehicle.userId) {
-      const user = await this.userRepository.findOne({
+      if (user.role !== UserRole.Admin) {
+        throw new ForbiddenException('Only admin can change vehicle ownership');
+      }
+
+      const newUser = await this.userRepository.findOne({
         where: { id: updateVehicleDto.userId },
       });
 
-      if (!user) {
+      if (!newUser) {
         throw new NotFoundException(
           `User with ID ${updateVehicleDto.userId} not found`,
         );
       }
     }
 
-    // If license plate is being updated, check if it already exists
     if (
       updateVehicleDto.licensePlate &&
       updateVehicleDto.licensePlate !== vehicle.licensePlate
@@ -165,9 +231,22 @@ export class VehicleService {
   }
 
   async updateStatus(id: number, status: VehicleStatus): Promise<Vehicle> {
-    const vehicle = await this.findOne(id);
+    const vehicle = await this.vehicleRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+
+    if (!vehicle) {
+      throw new NotFoundException(`Vehicle with ID ${id} not found`);
+    }
+
     vehicle.status = status;
     return this.vehicleRepository.save(vehicle);
+  }
+
+  async remove(id: number, user: User): Promise<void> {
+    const vehicle = await this.findOne(id, user);
+    await this.vehicleRepository.remove(vehicle);
   }
 
   async activate(id: number): Promise<Vehicle> {
@@ -176,10 +255,5 @@ export class VehicleService {
 
   async deactivate(id: number): Promise<Vehicle> {
     return this.updateStatus(id, VehicleStatus.Inactive);
-  }
-
-  async remove(id: number): Promise<void> {
-    const vehicle = await this.findOne(id);
-    await this.vehicleRepository.remove(vehicle);
   }
 }
