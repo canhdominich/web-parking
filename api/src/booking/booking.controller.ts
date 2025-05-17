@@ -113,7 +113,7 @@ export class BookingController {
     return this.bookingService.remove(id);
   }
 
-  @Get('dashboard-statistics')
+  @Get('dashboard/statistics')
   @Roles(UserRole.Admin)
   @ApiOperation({ summary: 'Get dashboard statistics' })
   @ApiResponse({ status: 200, description: 'Return dashboard statistics.' })

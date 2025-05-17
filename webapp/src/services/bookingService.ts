@@ -38,7 +38,7 @@ export const deleteBooking = async (id: number) => {
 }
 
 export const getDashboardStats = async () => {
-    const res = await httpClient.get('/bookings/dashboard-statistics')
+    const res = await httpClient.get('/bookings/dashboard/statistics')
     return res.data
 }
 

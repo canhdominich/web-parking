@@ -37,7 +37,7 @@ export class BookingService {
     private readonly parkingSlotRepository: Repository<ParkingSlot>,
     @InjectRepository(VehicleRatePlan)
     private readonly vehicleRatePlanRepository: Repository<VehicleRatePlan>,
-  ) { }
+  ) {}
 
   async create(createBookingDto: CreateBookingDto): Promise<Booking> {
     // Check if user exists
@@ -245,42 +245,83 @@ export class BookingService {
     totalBookings: number;
     totalRevenue: number;
     totalUsers: number;
+    monthlyBookings: number[];
+    monthlyRevenue: number[];
   }> {
-    const totalUsers = await this.userRepository.count({
-      where: {
-        role: UserRole.ParkingGuest,
-      },
-    });
+    try {
+      console.log('Start getDashboardStats');
+      const totalUsers = await this.userRepository.count({
+        where: {
+          role: UserRole.ParkingGuest,
+        },
+      });
 
-    const result = await this.bookingRepository
-      .createQueryBuilder('booking')
-      .select('COUNT(*)', 'count')
-      .addSelect('SUM(booking.totalPrice)', 'totalRevenue')
-      .where('booking.status != :cancelledStatus', {
-        cancelledStatus: BookingStatus.Cancelled,
-      })
-      .andWhere('booking.paymentStatus = :paidStatus', {
-        paidStatus: BookingPaymentStatus.Paid,
-      })
-      .getRawOne();
+      const result = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .select('COUNT(*)', 'count')
+        .addSelect('SUM(booking.totalPrice)', 'totalRevenue')
+        .where('booking.status != :cancelledStatus', {
+          cancelledStatus: BookingStatus.Cancelled,
+        })
+        .andWhere('booking.paymentStatus = :paidStatus', {
+          paidStatus: BookingPaymentStatus.Paid,
+        })
+        .getRawOne();
 
-    if (!result) {
+      console.log('result = ', result);
+
+      // Get current year
+      const currentYear = new Date().getFullYear();
+
+      // Get monthly statistics
+      const monthlyStats = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .select('EXTRACT(MONTH FROM booking.createdAt)', 'month')
+        .addSelect('COUNT(*)', 'count')
+        .addSelect('SUM(booking.totalPrice)', 'revenue')
+        .where('EXTRACT(YEAR FROM booking.createdAt) = :year', {
+          year: currentYear,
+        })
+        .andWhere('booking.status != :status', {
+          status: BookingStatus.Cancelled,
+        })
+        .andWhere('booking.paymentStatus = :paymentStatus', {
+          paymentStatus: BookingPaymentStatus.Paid,
+        })
+        .groupBy('EXTRACT(MONTH FROM booking.createdAt)')
+        .orderBy('month', 'ASC')
+        .getRawMany();
+
+      console.log('monthlyStats = ', monthlyStats);
+
+      // Initialize arrays with zeros for all 12 months
+      const monthlyBookings: number[] = new Array(12).fill(0);
+      const monthlyRevenue: number[] = new Array(12).fill(0);
+
+      // Fill in the actual values
+      monthlyStats.forEach(
+        (stat: { month: string; count: string; revenue: string }) => {
+          const monthIndex = parseInt(stat.month, 10) - 1;
+          monthlyBookings[monthIndex] = parseInt(stat.count, 10);
+          monthlyRevenue[monthIndex] = parseFloat(stat.revenue) || 0;
+        },
+      );
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const totalBookings = Number(result?.count ?? 0);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const totalRevenue = Number(result?.totalRevenue ?? 0);
+
       return {
-        totalBookings: 0,
-        totalRevenue: 0,
+        totalBookings,
+        totalRevenue: totalRevenue || 0,
         totalUsers,
+        monthlyBookings,
+        monthlyRevenue,
       };
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException('Failed to get dashboard stats');
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const totalBookings = Number(result.count ?? 0);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const totalRevenue = Number(result.totalRevenue ?? 0);
-
-    return {
-      totalBookings,
-      totalRevenue: totalRevenue || 0,
-      totalUsers,
-    };
   }
 }

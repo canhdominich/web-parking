@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Badge from "../ui/badge/Badge";
-import { ArrowDownIcon, ArrowUpIcon, BoxIconLine, GroupIcon } from "@/icons";
+// import Badge from "../ui/badge/Badge";
+import { BoxIconLine, GroupIcon } from "@/icons";
 import { getDashboardStats } from "@/services/bookingService";
 
 interface DashboardStats {
@@ -32,7 +32,9 @@ const EcommerceMetrics = () => {
   }, []);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+    </div>;
   }
 
   return (

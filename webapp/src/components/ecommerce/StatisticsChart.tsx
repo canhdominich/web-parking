@@ -1,147 +1,172 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 // import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 // import ChartTab from "../common/ChartTab";
 import dynamic from "next/dynamic";
+import { getDashboardStats } from "@/services/bookingService";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-export default function StatisticsChart() {
-  const options: ApexOptions = {
-    legend: {
-      show: false, // Hide legend
-      position: "top",
-      horizontalAlign: "left",
-    },
-    colors: ["#465FFF", "#9CB9FF"], // Define line colors
-    chart: {
-      fontFamily: "Roboto, sans-serif",
-      height: 310,
-      type: "line", // Set the chart type to 'line'
-      toolbar: {
-        show: false, // Hide chart toolbar
-      },
-    },
-    stroke: {
-      curve: "straight", // Define the line style (straight, smooth, or step)
-      width: [2, 2], // Line width for each dataset
-    },
+interface DashboardStats {
+  totalBookings: number;
+  totalRevenue: number;
+  totalUsers: number;
+  monthlyBookings: number[];
+  monthlyRevenue: number[];
+}
 
-    fill: {
-      type: "gradient",
-      gradient: {
-        opacityFrom: 0.55,
-        opacityTo: 0,
-      },
-    },
-    markers: {
-      size: 0, // Size of the marker points
-      strokeColors: "#fff", // Marker border color
-      strokeWidth: 2,
-      hover: {
-        size: 6, // Marker size on hover
-      },
-    },
-    grid: {
-      xaxis: {
-        lines: {
-          show: false, // Hide grid lines on x-axis
-        },
-      },
-      yaxis: {
-        lines: {
-          show: true, // Show grid lines on y-axis
-        },
-      },
-    },
-    dataLabels: {
-      enabled: false, // Disable data labels
-    },
-    tooltip: {
-      enabled: true, // Enable tooltip
-      x: {
-        format: "dd MMM yyyy", // Format for x-axis tooltip
-      },
-    },
-    xaxis: {
-      type: "category", // Category-based x-axis
-      categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-      axisBorder: {
-        show: false, // Hide x-axis border
-      },
-      axisTicks: {
-        show: false, // Hide x-axis ticks
-      },
-      tooltip: {
-        enabled: false, // Disable tooltip for x-axis points
-      },
-    },
-    yaxis: {
-      labels: {
-        style: {
-          fontSize: "12px", // Adjust font size for y-axis labels
-          colors: ["#6B7280"], // Color of the labels
-        },
-      },
-      title: {
-        text: "", // Remove y-axis title
-        style: {
-          fontSize: "0px",
-        },
-      },
-    },
-  };
+const StatisticsChart = () => {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalBookings: 0,
+    totalRevenue: 0,
+    totalUsers: 0,
+    monthlyBookings: new Array(12).fill(0),
+    monthlyRevenue: new Array(12).fill(0)
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await getDashboardStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+    </div>;
+  }
 
   const series = [
     {
       name: "Lượt gửi",
-      data: [180, 190, 170, 160, 175, 165, 170, 205, 230, 210, 240, 235],
+      data: stats.monthlyBookings,
     },
     {
       name: "Tiền thu",
-      data: [40, 30, 50, 40, 55, 40, 70, 100, 110, 120, 150, 140],
+      data: stats.monthlyRevenue,
     },
   ];
+
+  const options = {
+    chart: {
+      type: "bar",
+      height: 350,
+      stacked: false,
+      toolbar: {
+        show: false,
+      },
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: "55%",
+        borderRadius: 5,
+      },
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      show: true,
+      width: 2,
+      colors: ["transparent"],
+    },
+    xaxis: {
+      categories: [
+        "Tháng 1",
+        "Tháng 2",
+        "Tháng 3",
+        "Tháng 4",
+        "Tháng 5",
+        "Tháng 6",
+        "Tháng 7",
+        "Tháng 8",
+        "Tháng 9",
+        "Tháng 10",
+        "Tháng 11",
+        "Tháng 12",
+      ],
+    },
+    yaxis: [
+      {
+        title: {
+          text: "Lượt gửi",
+        },
+      },
+      {
+        opposite: true,
+        title: {
+          text: "Tiền thu (VND)",
+        },
+        labels: {
+          formatter: (value: number) => {
+            return value.toLocaleString('vi-VN', {
+              style: 'currency',
+              currency: 'VND',
+              minimumFractionDigits: 0
+            });
+          }
+        }
+      },
+    ],
+    tooltip: {
+      y: [
+        {
+          formatter: (value: number) => {
+            return value.toLocaleString();
+          },
+        },
+        {
+          formatter: (value: number) => {
+            return value.toLocaleString('vi-VN', {
+              style: 'currency',
+              currency: 'VND',
+              minimumFractionDigits: 0
+            });
+          },
+        },
+      ],
+    },
+    fill: {
+      opacity: 1,
+    },
+    colors: ["#3C50E0", "#80CAEE"],
+  };
+
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white px-5 pb-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
-      <div className="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
-        <div className="w-full">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-            Thống kê
-          </h3>
-        </div>
-        {/* <div className="flex items-start w-full gap-3 sm:justify-end">
-          <ChartTab />
-        </div> */}
+    <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
+      <div>
+        <h3 className="text-xl font-semibold text-black dark:text-white">
+          Thống kê theo tháng
+        </h3>
       </div>
 
-      <div className="max-w-full overflow-x-auto custom-scrollbar">
-        <div className="min-w-[1000px] xl:min-w-full">
+      <div className="mb-2">
+        <div id="chartOne" className="-ml-5">
           <ReactApexChart
             options={options}
             series={series}
-            type="area"
-            height={310}
+            type="bar"
+            height={350}
           />
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default StatisticsChart;
