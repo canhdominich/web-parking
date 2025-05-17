@@ -186,6 +186,9 @@ export default function ParkingSlotDataTable({ headers, items, onRefresh, parkin
                     </Badge>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    {item?.booking?.vehicle?.licensePlate}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     {parkingLots.find(lot => lot.id === item.parkingLotId)?.name} ({parkingLots.find(lot => lot.id === item.parkingLotId)?.totalSlots} chỗ)
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">

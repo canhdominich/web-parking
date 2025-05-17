@@ -19,15 +19,9 @@ export default function ParkingSlotPage() {
     try {
       setIsLoading(true);
       const data = await getUsers();
-      setUsers([
-        {
-          id: 0,
-          name: "Tên khách hàng",
-        },
-        ...data,
-      ]);
+      setUsers(data);
     } catch {
-      toast.error("Không thể tải danh sách bãi xe");
+      toast.error("Không thể tải danh sách người gửi");
     } finally {
       setIsLoading(false);
     }
@@ -37,13 +31,7 @@ export default function ParkingSlotPage() {
     try {
       setIsLoading(true);
       const data = await getParkingLots();
-      setParkingLots([
-        {
-          id: 0,
-          name: "Tên bãi xe",
-        },
-        ...data,
-      ]);
+      setParkingLots(data);
     } catch {
       toast.error("Không thể tải danh sách bãi xe");
     } finally {
@@ -57,7 +45,7 @@ export default function ParkingSlotPage() {
       const data = await getBookings();
       setBookings(data);
     } catch {
-      toast.error("Không thể tải danh sách bãi xe");
+      toast.error("Không thể tải danh sách đặt chỗ");
     } finally {
       setIsLoading(false);
     }

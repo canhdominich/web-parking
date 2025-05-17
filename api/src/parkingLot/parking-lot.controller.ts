@@ -39,7 +39,6 @@ export class ParkingLotController {
   @ApiResponse({
     status: 200,
     description: 'Return all parking lots.',
-    type: [ParkingLot],
   })
   findAll() {
     return this.parkingLotService.findAll();

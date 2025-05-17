@@ -10,8 +10,8 @@ export enum VehicleStatus {
 }
 
 export const VehicleStatusOptions = [
-  { value: VehicleStatus.Active, label: "Active" },
-  { value: VehicleStatus.Inactive, label: "Inactive" },
+  { value: VehicleStatus.Active, label: "Hoạt động" },
+  { value: VehicleStatus.Inactive, label: "Không hoạt động" },
 ];
 
 export const VehicleTypeOptions = [

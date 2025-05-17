@@ -12,6 +12,7 @@ export default function ParkingSlotPage() {
     { key: "name", title: "Tên chỗ đỗ" },
     { key: "vehicleType", title: "Loại xe" },
     { key: "status", title: "Trạng thái" },
+    { key: "booking", title: "Biển số xe" },
     { key: "parkingLotId", title: "Bãi xe" },
     { key: "address", title: "Địa chỉ" },
     { key: "action", title: "Hành động" },

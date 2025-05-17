@@ -68,6 +68,12 @@ const AppSidebar: React.FC = () => {
       requiredRole: [UserRole.Admin, UserRole.ParkingStaff, UserRole.ParkingGuest],
     },
     {
+      icon: <TableIcon />,
+      name: "Quản lý vào ra",
+      path: "/booking-status",
+      requiredRole: [UserRole.Admin, UserRole.ParkingStaff],
+    },
+    {
       icon: <ListIcon />,
       name: "Quản lý bãi xe",
       path: "/parking-lot",
@@ -77,7 +83,7 @@ const AppSidebar: React.FC = () => {
       icon: <TableIcon />,
       name: "Quản lý chỗ đỗ",
       path: "/parking-slot",
-      requiredRole: [UserRole.Admin],
+      requiredRole: [UserRole.Admin, UserRole.ParkingStaff],
     },
     {
       icon: <ListIcon />,
@@ -89,7 +95,7 @@ const AppSidebar: React.FC = () => {
       icon: <ListIcon />,
       name: "Lịch sử thanh toán",
       path: "/payment-history",
-      requiredRole: [UserRole.Admin, UserRole.ParkingStaff, UserRole.ParkingGuest],
+      requiredRole: [UserRole.Admin, UserRole.ParkingGuest],
     },
     {
       icon: <PageIcon />,

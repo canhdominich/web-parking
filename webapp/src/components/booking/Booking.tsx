@@ -22,9 +22,10 @@ import { Vehicle } from "@/services/vehicleService";
 import { getVehiclesByUser } from "@/services/vehicleService";
 import toast from "react-hot-toast";
 import { Booking } from "@/services/bookingService";
-import { BookingStatus } from "@/constants/booking.constant";
+import { BookingPaymentStatus, BookingPaymentStatusOptions, BookingStatus, BookingStatusOptions, BookingStatusType } from "@/constants/booking.constant";
 import moment from "moment";
 import axios from "axios";
+import { UserRole } from "@/constants/user.constant";
 
 interface CalendarEvent extends EventInput {
   id: string;
@@ -68,10 +69,11 @@ interface BookingProps {
 
 const getBookingStatusColor = (status: string): string => {
   const statusColorMap: Record<string, string> = {
-    [BookingStatus.Booked]: "Warning",
-    [BookingStatus.CheckedIn]: "Primary",
-    [BookingStatus.CheckedOut]: "Success",
-    [BookingStatus.Cancelled]: "Danger"
+    [BookingStatus.Booked]: "Success",
+    [BookingStatus.CheckedIn]: "Success",
+    [BookingStatus.CheckedOut]: "Primary",
+    [BookingStatus.Cancelled]: "Danger",
+    [BookingStatus.Pending]: "Warning"
   };
 
   return statusColorMap[status] || "Primary";
@@ -86,12 +88,28 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
     parkingLotId: 0,
     slotId: 0,
     checkinTime: "",
+    status: BookingStatus.Pending,
+    paymentStatus: BookingPaymentStatus.Unpaid
   });
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
   const [parkingSlots, setParkingSlots] = useState<ParkingSlot[]>(initialParkingSlots);
   const { isOpen, openModal, closeModal } = useModal();
 
   const [events, setEvents] = useState<CalendarEvent[]>(bookings.map(mapBookingToEvent));
+  const [user, setUser] = useState<User | null>(null);
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      if (parsedUser.role === UserRole.ParkingGuest) {
+        setFormData(prev => ({
+          ...prev,
+          userId: parsedUser.id.toString()
+        }));
+      }
+    }
+  }, []);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -118,6 +136,8 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
         parkingLotId: selectedBooking.parkingLotId,
         slotId: selectedBooking.slotId,
         checkinTime: selectedBooking.checkinTime,
+        status: selectedBooking.status,
+        paymentStatus: selectedBooking.paymentStatus
       });
 
       // Fetch vehicles for selected user
@@ -126,7 +146,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
           const userVehicles = await getVehiclesByUser(selectedBooking.userId);
           setVehicles(userVehicles);
         } catch (error) {
-          toast.error("Không thể lấy danh sách phương tiện");
+          alert("Không thể lấy danh sách phương tiện");
           setVehicles([]);
         }
       };
@@ -137,7 +157,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
           const slots = await getParkingSlotByParkingLotId(selectedBooking.parkingLotId);
           setParkingSlots(slots);
         } catch (error) {
-          toast.error("Không thể lấy danh sách chỗ đỗ");
+          alert("Không thể lấy danh sách chỗ đỗ");
           setParkingSlots([]);
         }
       };
@@ -161,18 +181,26 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
       setVehicles([
         {
           id: 0,
-          licensePlate: "Biển số xe",
+          licensePlate: "Chọn phương tiện",
         },
         ...userVehicles,
       ]);
     } catch (error) {
-      toast.error("Không thể lấy danh sách phương tiện");
+      alert("Không thể lấy danh sách phương tiện");
       setVehicles([]);
     }
   };
 
   const handleSelectVehicleChange = (value: string) => {
     setFormData({ ...formData, vehicleId: parseInt(value) });
+  };
+
+  const handleSelectStatusChange = (value: string) => {
+    setFormData({ ...formData, status: value as BookingStatusType });
+  };
+
+  const handleSelectPaymentStatusChange = (value: string) => {
+    setFormData({ ...formData, paymentStatus: value as BookingPaymentStatusType });
   };
 
   const handleSelectParkingLotChange = async (value: string) => {
@@ -184,12 +212,12 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
       setParkingSlots([
         {
           id: 0,
-          name: "Vị trí đỗ xe",
+          name: "Chọn vị trí đỗ xe",
         },
         ...slots,
       ]);
     } catch (error) {
-      toast.error("Không thể lấy danh sách chỗ đỗ");
+      alert("Không thể lấy danh sách chỗ đỗ");
       setParkingSlots([]);
     }
   };
@@ -214,7 +242,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
       closeModal();
       onRefresh();
     } catch {
-      toast.error(selectedBooking?.id ? "Không thể cập nhật đặt chỗ" : "Không thể Đặt chỗ");
+      alert(selectedBooking?.id ? "Không thể cập nhật đặt chỗ" : "Không thể Đặt chỗ");
     } finally {
       setIsSubmitting(false);
     }
@@ -235,9 +263,9 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.data) {
         const serverError = error.response.data;
-        toast.error(serverError.message || "Không thể xóa đặt chỗ");
+        alert(serverError.message || "Không thể xóa đặt chỗ");
       } else {
-        toast.error("Không thể xóa đặt chỗ");
+        alert("Không thể xóa đặt chỗ");
       }
     } finally {
       setIsSubmitting(false);
@@ -261,10 +289,10 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
           slotId: booking.slotId,
           checkinTime: moment(booking.checkinTime).format("YYYY-MM-DD HH:mm:00"),
         });
-    openModal();
+        openModal();
       }
     } catch (error) {
-      toast.error("Không thể lấy thông tin đặt chỗ");
+      alert("Không thể lấy thông tin đặt chỗ");
     }
   };
 
@@ -311,8 +339,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
               <div className="relative">
                 <DatePicker
                   id="date-picker"
-                  label="Ngày muốn đặt"
-                  placeholder="Select a date"
+                  placeholder="Chọn ngày đặt"
                   onChange={(dates, currentDateString) => {
                     console.log({ dates, currentDateString });
                     if (dates && dates[0]) {
@@ -334,18 +361,29 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
               </div>
             </div>
             <div className="mb-8 mt-12">
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Chọn khách gửi
-              </label>
               <div className="relative">
                 <Select
-                  value={formData.userId?.toString() || ""}
-                  options={users.map((user) => ({
-                    value: user.id.toString(),
-                    label: user.name,
-                  }))}
+                  value={formData.userId?.toString() || "0"}
                   onChange={handleSelectUserChange}
-                  className="dark:bg-dark-900"
+                  options={[
+                    {
+                      value: "0",
+                      label: "Tên người gửi",
+                    },
+                    ...(user?.role === UserRole.ParkingGuest
+                      ? users
+                        .filter(u => u.id === user?.id)
+                        .map(u => ({
+                          value: u.id.toString(),
+                          label: u.name,
+                        }))
+                      : users
+                        .filter(u => u.role === UserRole.ParkingGuest)
+                        .map(u => ({
+                          value: u.id.toString(),
+                          label: u.name,
+                        })))
+                  ]}
                 />
                 <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
                   <ChevronDownIcon />
@@ -353,9 +391,6 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
               </div>
             </div>
             <div className="mb-8">
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Chọn phương tiện
-              </label>
               <div className="relative">
                 <Select
                   value={formData.vehicleId?.toString() || ""}
@@ -373,16 +408,19 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
               </div>
             </div>
             <div className="mb-8">
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Chọn bãi xe
-              </label>
               <div className="relative">
                 <Select
                   value={formData.parkingLotId?.toString() || ""}
-                  options={parkingLots.map((lot) => ({
-                    value: lot.id.toString(),
-                    label: lot.name,
-                  }))}
+                  options={[
+                    {
+                      value: "0",
+                      label: "Chọn bãi xe",
+                    },
+                    ...parkingLots.map((lot) => ({
+                      value: lot.id.toString(),
+                      label: lot.name,
+                    })),
+                  ]}
                   onChange={handleSelectParkingLotChange}
                   className="dark:bg-dark-900"
                 />
@@ -392,9 +430,6 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
               </div>
             </div>
             <div className="mb-8">
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Chọn vị trí
-              </label>
               <div className="relative">
                 <Select
                   value={formData.slotId?.toString() || ""}
@@ -411,6 +446,52 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
                 </span>
               </div>
             </div>
+            {
+              user?.role === UserRole.Admin || user?.role === UserRole.ParkingStaff && (
+                <div className="mb-8">
+                  <div className="relative">
+                    <Select
+                      value={formData.status?.toString() || ""}
+                      options={[
+                        {
+                          value: "",
+                          label: "Trạng thái",
+                        },
+                        ...BookingStatusOptions
+                      ]}
+                      onChange={handleSelectStatusChange}
+                      className="dark:bg-dark-900"
+                    />
+                    <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                      <ChevronDownIcon />
+                    </span>
+                  </div>
+                </div>
+              )
+            }
+            {
+              user?.role === UserRole.Admin || user?.role === UserRole.ParkingStaff && (
+                <div className="mb-8">
+                  <div className="relative">
+                    <Select
+                      value={formData.paymentStatus?.toString() || ""}
+                      options={[
+                        {
+                          value: "",
+                          label: "Trạng thái thanh toán",
+                        },
+                        ...BookingPaymentStatusOptions
+                      ]}
+                      onChange={handleSelectPaymentStatusChange}
+                      className="dark:bg-dark-900"
+                    />
+                    <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                      <ChevronDownIcon />
+                    </span>
+                  </div>
+                </div>
+              )
+            }
           </div>
           <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
             <button
@@ -422,6 +503,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
             </button>
 
             {selectedBooking && selectedBooking.id ? (
+              <>
               <button
                 onClick={() => handleDelete(selectedBooking.id)}
                 type="button"
@@ -430,15 +512,24 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
               >
                 Xóa
               </button>
+                <button
+                  onClick={handleSubmit}
+                  type="button"
+                  disabled={isSubmitting}
+                  className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                >
+                  {isSubmitting ? "Đang xử lý..." : selectedBooking ? "Cập nhật" : "Thêm mới"}
+                </button>
+              </>
             ) : (
-            <button
+              <button
                 onClick={handleSubmit}
-              type="button"
+                type="button"
                 disabled={isSubmitting}
-              className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-            >
+                className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+              >
                 {isSubmitting ? "Đang xử lý..." : selectedBooking ? "Cập nhật" : "Thêm mới"}
-            </button>
+              </button>
             )}
           </div>
         </div>

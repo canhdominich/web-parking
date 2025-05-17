@@ -7,14 +7,21 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Booking } from './booking.entity';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UserRole } from 'src/constants/user.constant';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @ApiTags('bookings')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('bookings')
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
@@ -39,14 +46,21 @@ export class BookingController {
   }
 
   @Get()
+  @Roles(UserRole.Admin, UserRole.ParkingStaff, UserRole.ParkingGuest)
   @ApiOperation({ summary: 'Get all bookings' })
   @ApiResponse({
     status: 200,
     description: 'Return all bookings.',
     type: [Booking],
   })
-  findAll() {
-    return this.bookingService.findAll();
+  findAll(@Request() req) {
+    if (
+      req.user.role === UserRole.Admin ||
+      req.user.role === UserRole.ParkingStaff
+    ) {
+      return this.bookingService.findAll();
+    }
+    return this.bookingService.findByUser(req.user.id);
   }
 
   @Get(':id')
@@ -98,4 +112,4 @@ export class BookingController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.bookingService.remove(id);
   }
-} 
+}

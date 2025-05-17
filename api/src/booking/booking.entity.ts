@@ -53,7 +53,7 @@ export class Booking {
   @Column({ type: 'datetime', nullable: true })
   checkoutTime: Date | null;
 
-  @Column({ type: 'enum', enum: BookingStatus })
+  @Column({ type: 'enum', enum: BookingStatus, default: BookingStatus.Pending })
   status: BookingStatus;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })

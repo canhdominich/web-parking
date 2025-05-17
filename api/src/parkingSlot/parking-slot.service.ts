@@ -4,12 +4,14 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ParkingSlot } from './parking-slot.entity';
 import { CreateParkingSlotDto } from './dto/create-parking-slot.dto';
 import { UpdateParkingSlotDto } from './dto/update-parking-slot.dto';
 import { ParkingLot } from '../parkingLot/parking-lot.entity';
 import { VehicleTypeEnum } from '../constants/vehicleType.constant';
+import { BookingStatus } from 'src/constants/booking.constant';
+import { Booking } from 'src/booking/booking.entity';
 
 @Injectable()
 export class ParkingSlotService {
@@ -18,6 +20,8 @@ export class ParkingSlotService {
     private readonly parkingSlotRepository: Repository<ParkingSlot>,
     @InjectRepository(ParkingLot)
     private readonly parkingLotRepository: Repository<ParkingLot>,
+    @InjectRepository(Booking)
+    private readonly bookingRepository: Repository<Booking>,
   ) {}
 
   async create(
@@ -55,9 +59,28 @@ export class ParkingSlotService {
   }
 
   async findAll(): Promise<ParkingSlot[]> {
-    return this.parkingSlotRepository.find({
+    const slots = await this.parkingSlotRepository.find({
       relations: ['parkingLot'],
     });
+
+    const slotsWithBooking = await Promise.all(
+      slots.map(async (slot) => {
+        const booking = await this.bookingRepository.findOne({
+          relations: ['vehicle', 'user'],
+          where: {
+            parkingLotId: slot.parkingLotId,
+            status: In([BookingStatus.CheckedIn, BookingStatus.Booked]),
+          },
+        });
+
+        return {
+          ...slot,
+          booking: booking || {},
+        };
+      }),
+    );
+
+    return slotsWithBooking;
   }
 
   async findOne(id: number): Promise<ParkingSlot> {
@@ -84,10 +107,29 @@ export class ParkingSlotService {
       );
     }
 
-    return this.parkingSlotRepository.find({
+    const slots = await this.parkingSlotRepository.find({
       where: { parkingLotId },
       relations: ['parkingLot'],
     });
+
+    const slotsWithBooking = await Promise.all(
+      slots.map(async (slot) => {
+        const booking = await this.bookingRepository.findOne({
+          relations: ['vehicle', 'user'],
+          where: {
+            parkingLotId: slot.parkingLotId,
+            status: In([BookingStatus.CheckedIn, BookingStatus.Booked]),
+          },
+        });
+
+        return {
+          ...slot,
+          booking: booking || {},
+        };
+      }),
+    );
+
+    return slotsWithBooking;
   }
 
   async findByVehicleType(

@@ -3,11 +3,13 @@ export const BookingStatus = {
   CheckedIn: "CheckedIn",
   CheckedOut: "CheckedOut",
   Cancelled: "Cancelled",
+  Pending: "Pending",
 } as const;
 
 export type BookingStatusType = typeof BookingStatus[keyof typeof BookingStatus];
 
 export const BookingStatusOptions = [
+  { value: BookingStatus.Pending, label: "Đang chờ" },
   { value: BookingStatus.Booked, label: "Đã đặt chỗ" },
   { value: BookingStatus.CheckedIn, label: "Đã check-in" },
   { value: BookingStatus.CheckedOut, label: "Đã check-out" },
@@ -19,4 +21,10 @@ export const BookingPaymentStatus = {
   Paid: "Paid",
 };
 
+export const BookingPaymentStatusOptions = [
+  { value: BookingPaymentStatus.Unpaid, label: "Chưa thanh toán" },
+  { value: BookingPaymentStatus.Paid, label: "Đã thanh toán" },
+];
 
+export type BookingPaymentStatusType = typeof BookingPaymentStatus[keyof typeof BookingPaymentStatus];
+  

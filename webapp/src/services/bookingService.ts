@@ -43,6 +43,8 @@ export interface CreateBookingDto {
     parkingLotId: number;
     slotId: number;
     checkinTime: string;
+    status: string;
+    paymentStatus: string;
 }
 
 export interface UpdateBookingDto {
@@ -51,6 +53,8 @@ export interface UpdateBookingDto {
     parkingLotId?: number;
     slotId?: number;
     checkinTime?: string;
+    status?: string;
+    paymentStatus?: string;
 }
 
 export interface Booking {

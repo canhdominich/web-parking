@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, LessThanOrEqual, Not, Repository } from 'typeorm';
 import { Booking } from './booking.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
@@ -29,7 +29,7 @@ export class BookingService {
     private readonly parkingLotRepository: Repository<ParkingLot>,
     @InjectRepository(ParkingSlot)
     private readonly parkingSlotRepository: Repository<ParkingSlot>,
-  ) {}
+  ) { }
 
   async create(createBookingDto: CreateBookingDto): Promise<Booking> {
     // Check if user exists
@@ -71,17 +71,29 @@ export class BookingService {
         `Parking slot with ID ${createBookingDto.slotId} not found`,
       );
     }
-    if (parkingSlot.status !== ParkingSlotStatus.Available) {
+
+    const findBooking = await this.bookingRepository.findOne({
+      where: {
+        slotId: createBookingDto.slotId,
+        status: In([
+          BookingStatus.CheckedIn,
+          BookingStatus.Booked,
+          BookingStatus.Pending,
+        ]),
+        paymentStatus: PaymentStatus.Paid,
+      },
+    });
+    if (findBooking) {
       throw new BadRequestException(
-        `Parking slot with ID ${createBookingDto.slotId} is not available`,
+        `Parking slot with ID ${createBookingDto.slotId} is already booked`,
       );
     }
 
     // Create booking
     const booking = this.bookingRepository.create({
       ...createBookingDto,
-      status: BookingStatus.CheckedIn,
-      paymentStatus: PaymentStatus.Unpaid,
+      status: createBookingDto.status || BookingStatus.Pending,
+      paymentStatus: createBookingDto.paymentStatus || PaymentStatus.Unpaid,
       totalPrice: 0,
     });
 
@@ -140,7 +152,21 @@ export class BookingService {
       const parkingSlot = await this.parkingSlotRepository.findOne({
         where: { id: booking.slotId },
       });
-      if (parkingSlot) {
+      const findBookingWithSlotFromNow = await this.bookingRepository.findOne({
+        where: {
+          id: Not(id),
+          slotId: booking.slotId,
+          status: In([
+            BookingStatus.CheckedIn,
+            BookingStatus.Booked,
+            BookingStatus.Pending,
+          ]),
+          paymentStatus: PaymentStatus.Paid,
+          checkinTime: LessThanOrEqual(new Date()),
+        },
+      });
+
+      if (parkingSlot && !findBookingWithSlotFromNow) {
         parkingSlot.status = ParkingSlotStatus.Available;
         await this.parkingSlotRepository.save(parkingSlot);
       }
@@ -158,15 +184,38 @@ export class BookingService {
   async remove(id: number): Promise<void> {
     const booking = await this.findOne(id);
 
-    // If booking is still active, update parking slot status
-    if (booking.status === BookingStatus.CheckedIn) {
-      const parkingSlot = await this.parkingSlotRepository.findOne({
-        where: { id: booking.slotId },
-      });
-      if (parkingSlot) {
-        parkingSlot.status = ParkingSlotStatus.Available;
-        await this.parkingSlotRepository.save(parkingSlot);
-      }
+    if (
+      [
+        BookingStatus.CheckedIn,
+        BookingStatus.Booked,
+        BookingStatus.Pending,
+        BookingStatus.CheckedOut,
+      ].includes(booking.status) &&
+      booking.paymentStatus === PaymentStatus.Paid
+    ) {
+      throw new BadRequestException('Booking is not allowed to be deleted');
+    }
+
+    const parkingSlot = await this.parkingSlotRepository.findOne({
+      where: { id: booking.slotId },
+    });
+
+    const findBookingWithSlotFromNow = await this.bookingRepository.findOne({
+      where: {
+        id: Not(id),
+        slotId: booking.slotId,
+        status: In([
+          BookingStatus.CheckedIn,
+          BookingStatus.Booked,
+          BookingStatus.Pending,
+        ]),
+        paymentStatus: PaymentStatus.Paid,
+        checkinTime: LessThanOrEqual(new Date()),
+      },
+    });
+    if (parkingSlot && !findBookingWithSlotFromNow) {
+      parkingSlot.status = ParkingSlotStatus.Available;
+      await this.parkingSlotRepository.save(parkingSlot);
     }
 
     await this.bookingRepository.remove(booking);

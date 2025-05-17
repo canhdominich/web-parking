@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsDateString, IsEnum } from 'class-validator';
+import { BookingStatus } from 'src/constants/booking.constant';
+import { PaymentStatus } from 'src/constants/payment.constant';
 
 export class CreateBookingDto {
   @ApiProperty({ example: 1 })
@@ -26,4 +28,14 @@ export class CreateBookingDto {
   @IsDateString()
   @IsNotEmpty()
   checkinTime: Date;
-} 
+
+  @ApiProperty({ example: BookingStatus.Pending })
+  @IsEnum(BookingStatus)
+  @IsNotEmpty()
+  status: BookingStatus;
+
+  @ApiProperty({ example: PaymentStatus.Unpaid })
+  @IsEnum(PaymentStatus)
+  @IsNotEmpty()
+  paymentStatus: PaymentStatus;
+}

@@ -110,4 +110,4 @@ export class ParkingSlotController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.parkingSlotService.remove(id);
   }
-} 
+}

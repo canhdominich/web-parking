@@ -12,7 +12,7 @@ import { BasicTableProps } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import Select from "../form/Select";
-import { VehicleStatus, VehicleType, VehicleTypeOptions } from "@/constants/vehicle.constant";
+import { VehicleStatus, VehicleStatusOptions, VehicleType, VehicleTypeOptions } from "@/constants/vehicle.constant";
 import { ChevronDownIcon } from "@/icons";
 import { CreateVehicleDto, deleteVehicle, updateVehicle, Vehicle } from "@/services/vehicleService";
 import { createVehicle } from "@/services/vehicleService";
@@ -113,10 +113,20 @@ export default function VehicleDataTable({ headers, items, onRefresh }: VehicleD
       setIsSubmitting(false);
     }
   };
+
+  const getVehicleTypeLabel = (vehicleType: VehicleType): string => {
+    const vehicleTypeOption = VehicleTypeOptions.find(option => option.value === vehicleType);
+    return vehicleTypeOption ? vehicleTypeOption.label : vehicleType;
+  };
+
+  const getVehicleStatusLabel = (status: VehicleStatus): string => {
+    const vehicleStatusOption = VehicleStatusOptions.find(option => option.value === status);
+    return vehicleStatusOption ? vehicleStatusOption.label : status;
+  };
   
   return (
     <div className="overflow-hidden rounded-xl bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="mb-6 px-5 flex items-center gap-3 modal-footer sm:justify-start">
+      <div className="mb-6 px-5 flex items-start gap-3 modal-footer sm:justify-start">
         <button
           onClick={openModal}
           type="button"
@@ -131,11 +141,11 @@ export default function VehicleDataTable({ headers, items, onRefresh }: VehicleD
             {/* Table Header */}
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
-                {headers.map((header) => (
+                {headers.map((header, index) => (
                   <TableCell
                     key={header.key}
                     isHeader
-                    className="px-5 py-3 font-medium text-start text-theme-sm dark:text-gray-400"
+                    className={index === 0 || index === headers.length - 1 ? "px-5 py-3 font-medium text-start text-theme-sm dark:text-gray-400" : "px-5 py-3 font-medium text-center text-theme-sm dark:text-gray-400"}
                   >
                     {header.title}
                   </TableCell>
@@ -147,41 +157,41 @@ export default function VehicleDataTable({ headers, items, onRefresh }: VehicleD
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
               {items.map((item: Vehicle) => (
                 <TableRow key={item.id}>
-                  <TableCell className="px-5 py-4 sm:px-6 text-start">
+                  <TableCell className="px-5 py-4 sm:px-6 text-center">
                     <div className="flex items-center gap-3">
                       <div>
                         <span className="block text-gray-500 text-theme-sm dark:text-gray-400">
-                    {item.user.name}
+                          {item.user.name}
                         </span>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.vehicleType}
+                  <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
+                    {getVehicleTypeLabel(item.vehicleType)}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                     {item.licensePlate}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                     {item.model}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                     {item.color}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                     <Badge
                       size="sm"
                       color={
-                        item.status === "Active"
+                        item.status === VehicleStatus.Active
                           ? "success"
                           : "error"
                       }
                     >
-                      {item.status}
+                      {getVehicleStatusLabel(item.status as VehicleStatus)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <div className="flex items-center gap-3">
+                  <TableCell className="px-4 py-3 text-gray-500 text-end text-theme-sm dark:text-gray-400">
+                    <div className="flex items-end gap-3">
                       <button
                         onClick={() => handleEdit(item)}
                         className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
@@ -262,7 +272,7 @@ export default function VehicleDataTable({ headers, items, onRefresh }: VehicleD
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                   className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                 />
-                </div>
+              </div>
           </div>
           <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
             <button
