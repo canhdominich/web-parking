@@ -9,8 +9,8 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 const Input: FC<InputProps> = ({
-  label,
-  error,
+  // label,
+  // error,
   className = "",
   ...props
 }) => {

@@ -7,7 +7,6 @@ import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import Image from "next/image";
 import { updateUser } from "@/services/userService";
-import { toast } from "react-hot-toast";
 import { User } from "@/types/common";
 
 const UserMetaCard = () => {
@@ -18,7 +17,6 @@ const UserMetaCard = () => {
     email: "",
     phone: "",
   });
-  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -39,20 +37,17 @@ const UserMetaCard = () => {
       ...prev,
       [name]: value,
     }));
-    setIsEditing(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!user) return;
-
     try {
       const updatedUser = await updateUser(user.id.toString(), formData);
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
-      setIsEditing(false);
       closeModal();
     } catch (error) {
+      console.log(error);
       alert("Cập nhật thông tin thất bại");
     }
   };
@@ -169,7 +164,7 @@ const UserMetaCard = () => {
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Đóng
               </Button>
-              <Button size="sm" onClick={handleSubmit}>
+              <Button size="sm" onClick={() => handleSubmit()}>
                 Lưu thay đổi
               </Button>
             </div>
