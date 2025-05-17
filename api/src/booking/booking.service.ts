@@ -15,6 +15,7 @@ import { ParkingSlot } from '../parkingSlot/parking-slot.entity';
 import { BookingStatus } from '../constants/booking.constant';
 import { ParkingSlotStatus } from '../constants/parkingSlot.constant';
 import { PaymentStatus } from '../constants/payment.constant';
+import { VehicleRatePlan } from 'src/vehicleRatePlan/vehicleRatePlan.entity';
 
 @Injectable()
 export class BookingService {
@@ -29,6 +30,8 @@ export class BookingService {
     private readonly parkingLotRepository: Repository<ParkingLot>,
     @InjectRepository(ParkingSlot)
     private readonly parkingSlotRepository: Repository<ParkingSlot>,
+    @InjectRepository(VehicleRatePlan)
+    private readonly vehicleRatePlanRepository: Repository<VehicleRatePlan>,
   ) { }
 
   async create(createBookingDto: CreateBookingDto): Promise<Booking> {
@@ -81,6 +84,7 @@ export class BookingService {
           BookingStatus.Pending,
         ]),
         paymentStatus: PaymentStatus.Paid,
+        checkinTime: LessThanOrEqual(new Date(createBookingDto.checkinTime)),
       },
     });
     if (findBooking) {
@@ -89,12 +93,16 @@ export class BookingService {
       );
     }
 
+    const vehicleRatePlan = await this.vehicleRatePlanRepository.findOne({
+      where: { vehicleType: vehicle.vehicleType },
+    });
+
     // Create booking
     const booking = this.bookingRepository.create({
       ...createBookingDto,
       status: createBookingDto.status || BookingStatus.Pending,
       paymentStatus: createBookingDto.paymentStatus || PaymentStatus.Unpaid,
-      totalPrice: 0,
+      totalPrice: vehicleRatePlan ? vehicleRatePlan.pricePerEntry : 0,
     });
 
     // Update parking slot status
@@ -175,6 +183,13 @@ export class BookingService {
       if (!updateBookingDto.checkoutTime) {
         updateBookingDto.checkoutTime = new Date();
       }
+    }
+
+    const vehicleRatePlan = await this.vehicleRatePlanRepository.findOne({
+      where: { vehicleType: booking.vehicle.vehicleType },
+    });
+    if (vehicleRatePlan) {
+      updateBookingDto.totalPrice = vehicleRatePlan.pricePerEntry;
     }
 
     Object.assign(booking, updateBookingDto);

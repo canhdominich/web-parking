@@ -20,9 +20,8 @@ import DatePicker from "../form/date-picker";
 import { User } from "@/services/userService";
 import { Vehicle } from "@/services/vehicleService";
 import { getVehiclesByUser } from "@/services/vehicleService";
-import toast from "react-hot-toast";
 import { Booking } from "@/services/bookingService";
-import { BookingPaymentStatus, BookingPaymentStatusOptions, BookingStatus, BookingStatusOptions, BookingStatusType } from "@/constants/booking.constant";
+import { BookingPaymentStatus, BookingPaymentStatusOptions, BookingPaymentStatusType, BookingStatus, BookingStatusOptions, BookingStatusType } from "@/constants/booking.constant";
 import moment from "moment";
 import axios from "axios";
 import { UserRole } from "@/constants/user.constant";
@@ -146,6 +145,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
           const userVehicles = await getVehiclesByUser(selectedBooking.userId);
           setVehicles(userVehicles);
         } catch (error) {
+          console.log(error);
           alert("Không thể lấy danh sách phương tiện");
           setVehicles([]);
         }
@@ -157,6 +157,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
           const slots = await getParkingSlotByParkingLotId(selectedBooking.parkingLotId);
           setParkingSlots(slots);
         } catch (error) {
+          console.log(error);
           alert("Không thể lấy danh sách chỗ đỗ");
           setParkingSlots([]);
         }
@@ -186,6 +187,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
         ...userVehicles,
       ]);
     } catch (error) {
+      console.log("error", error);
       alert("Không thể lấy danh sách phương tiện");
       setVehicles([]);
     }
@@ -217,6 +219,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
         ...slots,
       ]);
     } catch (error) {
+      console.log("error", error);
       alert("Không thể lấy danh sách chỗ đỗ");
       setParkingSlots([]);
     }
@@ -234,10 +237,10 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
       setIsSubmitting(true);
       if (selectedBooking?.id) {
         await updateBooking(selectedBooking.id, formData as UpdateBookingDto);
-        toast.success("Cập nhật đặt chỗ thành công");
+        alert("Cập nhật đặt chỗ thành công");
       } else {
         await createBooking(formData as CreateBookingDto);
-        toast.success("Đặt chỗ thành công");
+        alert("Đặt chỗ thành công");
       }
       closeModal();
       onRefresh();
@@ -257,7 +260,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
     try {
       setIsSubmitting(true);
       await deleteBooking(id);
-      toast.success("Xóa đặt chỗ thành công");
+      alert("Xóa đặt chỗ thành công");
       closeModal();
       onRefresh();
     } catch (error) {
@@ -292,6 +295,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
         openModal();
       }
     } catch (error) {
+      console.log("error", error);
       alert("Không thể lấy thông tin đặt chỗ");
     }
   };
