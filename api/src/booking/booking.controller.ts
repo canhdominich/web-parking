@@ -112,4 +112,12 @@ export class BookingController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.bookingService.remove(id);
   }
+
+  @Get('dashboard-statistics')
+  @Roles(UserRole.Admin)
+  @ApiOperation({ summary: 'Get dashboard statistics' })
+  @ApiResponse({ status: 200, description: 'Return dashboard statistics.' })
+  getDashboardStats() {
+    return this.bookingService.getDashboardStats();
+  }
 }

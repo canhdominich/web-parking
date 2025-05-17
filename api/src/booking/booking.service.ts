@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   NotFoundException,
@@ -12,10 +13,14 @@ import { User } from '../user/user.entity';
 import { Vehicle } from '../vehicle/vehicle.entity';
 import { ParkingLot } from '../parkingLot/parking-lot.entity';
 import { ParkingSlot } from '../parkingSlot/parking-slot.entity';
-import { BookingStatus } from '../constants/booking.constant';
+import {
+  BookingPaymentStatus,
+  BookingStatus,
+} from '../constants/booking.constant';
 import { ParkingSlotStatus } from '../constants/parkingSlot.constant';
 import { PaymentStatus } from '../constants/payment.constant';
 import { VehicleRatePlan } from 'src/vehicleRatePlan/vehicleRatePlan.entity';
+import { UserRole } from 'src/constants/user.constant';
 
 @Injectable()
 export class BookingService {
@@ -234,5 +239,48 @@ export class BookingService {
     }
 
     await this.bookingRepository.remove(booking);
+  }
+
+  async getDashboardStats(): Promise<{
+    totalBookings: number;
+    totalRevenue: number;
+    totalUsers: number;
+  }> {
+    const totalUsers = await this.userRepository.count({
+      where: {
+        role: UserRole.ParkingGuest,
+      },
+    });
+
+    const result = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .select('COUNT(*)', 'count')
+      .addSelect('SUM(booking.totalPrice)', 'totalRevenue')
+      .where('booking.status != :cancelledStatus', {
+        cancelledStatus: BookingStatus.Cancelled,
+      })
+      .andWhere('booking.paymentStatus = :paidStatus', {
+        paidStatus: BookingPaymentStatus.Paid,
+      })
+      .getRawOne();
+
+    if (!result) {
+      return {
+        totalBookings: 0,
+        totalRevenue: 0,
+        totalUsers,
+      };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const totalBookings = Number(result.count ?? 0);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const totalRevenue = Number(result.totalRevenue ?? 0);
+
+    return {
+      totalBookings,
+      totalRevenue: totalRevenue || 0,
+      totalUsers,
+    };
   }
 }
