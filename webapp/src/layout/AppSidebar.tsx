@@ -69,9 +69,9 @@ const AppSidebar: React.FC = () => {
     },
     {
       icon: <ListIcon />,
-      name: "Quản lý vào ra",
+      name: user?.role === UserRole.ParkingGuest ? "Lịch sử đặt chỗ" : "Quản lý vào ra",
       path: "/booking-status",
-      requiredRole: [UserRole.Admin, UserRole.ParkingStaff],
+      requiredRole: [UserRole.Admin, UserRole.ParkingStaff, UserRole.ParkingGuest],
     },
     {
       icon: <ListIcon />,

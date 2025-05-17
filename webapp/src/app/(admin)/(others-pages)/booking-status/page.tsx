@@ -2,6 +2,7 @@
 import BookingStatusDataTable from "@/components/booking-status/BookingStatusDataTable";
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import { UserRole } from "@/constants/user.constant";
 import { getBookings } from "@/services/bookingService";
 import { Booking } from "@/services/bookingService";
 import { ParkingLot, getParkingLots } from "@/services/parkingLotService";
@@ -75,10 +76,20 @@ export default function BookingStatusPage() {
     fetchParkingLots();
     fetchUsers();
     fetchBookings();
-  }
+  };
+
+  const [user, setUser] = useState<User | null>(null);
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+    }
+  }, []);
+
   return (
     <div>
-      <PageBreadcrumb pageTitle="Quản lý vào ra" />
+      <PageBreadcrumb pageTitle={user?.role === UserRole.ParkingGuest ? "Lịch sử đặt chỗ" : "Quản lý vào ra"} />
       <div className="space-y-6">
         <ComponentCard title="">
           {isLoading ? (

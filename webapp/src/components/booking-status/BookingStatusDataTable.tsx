@@ -280,26 +280,35 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
 
   return (
     <div className="overflow-hidden rounded-xl bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="mb-6 px-5 flex items-center gap-3 modal-footer sm:justify-start">
-        <button
-          onClick={openModal}
-          type="button"
-          className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-        >
-          Đặt chỗ
-        </button>
-      </div>
+      {
+        user?.role !== UserRole.ParkingGuest && (
+          <div className="mb-6 px-5 flex items-center gap-3 modal-footer sm:justify-start">
+            <button
+              onClick={openModal}
+              type="button"
+              className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+            >
+              Đặt chỗ
+            </button>
+          </div>
+        )
+      }
+
       <div className="max-w-full overflow-x-auto">
         <div className="min-w-[1102px]">
           <Table>
             {/* Table Header */}
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
-                {headers.map((header, index) => (
+                {(user?.role === UserRole.ParkingGuest ? headers.slice(0, -1) : headers).map((header, index) => (
                   <TableCell
                     key={header.key}
                     isHeader
-                    className={index === 0 ? "px-5 py-3 font-medium text-start text-theme-sm dark:text-gray-400" : "px-5 py-3 font-medium text-center text-theme-sm dark:text-gray-400"}
+                    className={
+                      index === 0
+                        ? "px-5 py-3 font-medium text-start text-theme-sm dark:text-gray-400"
+                        : "px-5 py-3 font-medium text-center text-theme-sm dark:text-gray-400"
+                    }
                   >
                     {header.title}
                   </TableCell>
@@ -369,20 +378,22 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
                     </Badge>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-end text-theme-sm dark:text-gray-400">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleEdit(item.id)}
-                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-                      >
-                        Cập nhật
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="btn btn-error btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
-                      >
-                        Xóa
-                      </button>
-                    </div>
+                    {user?.role !== UserRole.ParkingGuest && (
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleEdit(item.id)}
+                          className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                        >
+                          Cập nhật
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="btn btn-error btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
