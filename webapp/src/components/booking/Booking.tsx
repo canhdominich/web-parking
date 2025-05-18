@@ -27,7 +27,6 @@ import axios from "axios";
 import { UserRole } from "@/constants/user.constant";
 import { createVNPayPaymentUrl, handleVNPayWebhook } from "@/services/paymentService";
 import { useSearchParams } from 'next/navigation';
-import router from "next/router";
 
 interface CalendarEvent extends EventInput {
   id: string;
@@ -180,30 +179,36 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
 
   // Handle VNPay webhook
   useEffect(() => {
-    const handlePaymentCallback = async () => {
-      const queryParams = Object.fromEntries(searchParams.entries());
+    const queryParams = Object.fromEntries(searchParams.entries());
+    const isVNPayCallback =
+      queryParams['vnp_ResponseCode'] && queryParams['vnp_SecureHash'];
 
-      // Check if this is a VNPay callback
-      let url = "/booking";
-      if (queryParams && queryParams['vnp_ResponseCode'] && queryParams['vnp_SecureHash']) {
-        try {
-          const result = await handleVNPayWebhook(queryParams);
-          alert(result.message);
-          if (result.success) {
-            url = result.redirectUrl;
-          }
-        } catch (error) {
-          console.error('Error processing payment callback:', error);
-          alert('Có lỗi xảy ra khi xử lý thanh toán');
+    if (!isVNPayCallback) return;
+
+    const handlePaymentCallback = async () => {
+      let message = '';
+      let redirectUrl = window.location.pathname; // giữ nguyên path, không có query
+
+      try {
+        const result = await handleVNPayWebhook(queryParams);
+        message = result.message;
+        if (result.success && result.redirectUrl) {
+          redirectUrl = result.redirectUrl;
         }
-        finally {
-          window.location.href = url;
-        }
+      } catch (error) {
+        console.error('Error processing payment callback:', error);
+        alert('Có lỗi xảy ra khi xử lý thanh toán');
+      } finally {
+        alert(message);
+
+        // Redirect to same URL without query params
+        window.location.replace(redirectUrl);
       }
     };
 
     handlePaymentCallback();
   }, [searchParams]);
+
 
   const handleSelectUserChange = async (value: string) => {
     const userId = parseInt(value);
