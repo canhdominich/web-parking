@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 // import ChartTab from "../common/ChartTab";
 import dynamic from "next/dynamic";
 import { getDashboardStats } from "@/services/bookingService";
+import { ApexOptions } from "apexcharts";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -158,7 +159,7 @@ const StatisticsChart = () => {
       <div className="mb-2">
         <div id="chartOne" className="-ml-5">
           <ReactApexChart
-            options={options}
+            options={options as ApexOptions}
             series={series}
             type="bar"
             height={350}

@@ -25,7 +25,9 @@ import { BookingPaymentStatus, BookingPaymentStatusOptions, BookingPaymentStatus
 import moment from "moment";
 import axios from "axios";
 import { UserRole } from "@/constants/user.constant";
-
+import crypto from 'crypto';
+import dateFormat from 'dateformat';
+import { createVNPayPaymentUrl } from "@/services/paymentService";
 interface CalendarEvent extends EventInput {
   id: string;
   title: string;
@@ -93,9 +95,10 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
   const [parkingSlots, setParkingSlots] = useState<ParkingSlot[]>(initialParkingSlots);
   const { isOpen, openModal, closeModal } = useModal();
-
+  const [isPaying, setIsPaying] = useState(false);
   const [events, setEvents] = useState<CalendarEvent[]>(bookings.map(mapBookingToEvent));
   const [user, setUser] = useState<User | null>(null);
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -250,6 +253,30 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
       setIsSubmitting(false);
     }
   };
+
+  const handlePay = async (booking: Booking) => {
+    if (isPaying) return;
+
+    try {
+      setIsPaying(true);
+
+      if (!booking?.id || !booking.totalPrice) {
+        alert("Thiếu thông tin thanh toán");
+        return;
+      }
+
+      const paymentUrl = await createVNPayPaymentUrl(booking.id, Number(booking.totalPrice) * 100);
+      console.log("paymentUrl =", paymentUrl);
+
+      window.location.href = paymentUrl;
+    } catch (error) {
+      console.error(error);
+      alert('Không thể thanh toán');
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
 
   const handleDelete = async (id: number) => {
     if (isSubmitting) return;
@@ -506,16 +533,27 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
               Đóng
             </button>
 
+            {selectedBooking && selectedBooking.id && selectedBooking.paymentStatus === BookingPaymentStatus.Unpaid && (
+              <button
+                onClick={() => handlePay(selectedBooking)}
+                type="button"
+                disabled={isPaying}
+                className="btn btn-warning btn-update-event flex w-full justify-center rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-600 sm:w-auto"
+              >
+                Thanh toán
+              </button>
+            )}
+
             {selectedBooking && selectedBooking.id ? (
               <>
-              <button
-                onClick={() => handleDelete(selectedBooking.id)}
-                type="button"
-                disabled={isSubmitting}
-                className="btn btn-danger btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
-              >
-                Xóa
-              </button>
+                <button
+                  onClick={() => handleDelete(selectedBooking.id)}
+                  type="button"
+                  disabled={isSubmitting}
+                  className="btn btn-danger btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
+                >
+                  Xóa
+                </button>
                 <button
                   onClick={handleSubmit}
                   type="button"

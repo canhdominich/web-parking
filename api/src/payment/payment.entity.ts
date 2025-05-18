@@ -6,6 +6,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { Booking } from 'src/booking/booking.entity';
 import {
@@ -22,13 +23,14 @@ export class Payment {
   bookingId: number;
 
   @ManyToOne(() => Booking)
+  @Index('IDX_booking_id')
   @JoinColumn({ name: 'bookingId' })
   booking: Booking;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
-  @Column({ type: 'enum', enum: PaymentMethod })
+  @Column({ type: 'enum', enum: PaymentMethod, default: PaymentMethod.VNPay })
   paymentMethod: PaymentMethod;
 
   @Column({ type: 'varchar', length: 255 })

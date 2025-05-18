@@ -10,8 +10,9 @@ import { VehicleRatePlanModule } from './vehicleRatePlan/vehicle-rate-plan.modul
 import { ParkingLotModule } from './parkingLot/parking-lot.module';
 import { ParkingSlotModule } from './parkingSlot/parking-slot.module';
 import { BookingModule } from './booking/booking.module';
-import { PaymentModule } from './payments/payment.module';
+import { PaymentModule } from './payment/payment.module';
 import { AuthModule } from './auth/auth.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({

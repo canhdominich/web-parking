@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Query, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  ParseIntPipe,
+  Post,
+  Body,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PaymentService } from './payment.service';
 import { PaymentFilterDto } from './dto/payment-filter.dto';
@@ -43,5 +51,23 @@ export class PaymentController {
     @Param('bookingId', ParseIntPipe) bookingId: number,
   ) {
     return this.paymentService.findByBooking(bookingId);
+  }
+
+  @Post('create-payment-url')
+  createPaymentUrl(@Body() body: { bookingId: number; amount: number }) {
+    return this.paymentService.createVNPayPaymentUrl(
+      body.bookingId,
+      body.amount,
+    );
+  }
+
+  @Get('vnpay/payment-return')
+  @ApiOperation({ summary: 'Handle VNPay payment webhook' })
+  @ApiResponse({
+    status: 200,
+    description: 'Process payment webhook and return result',
+  })
+  async handleWebhook(@Query() query: Record<string, string>) {
+    return this.paymentService.handleVNPayWebhook(query);
   }
 }
