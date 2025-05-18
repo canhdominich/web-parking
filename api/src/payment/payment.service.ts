@@ -153,7 +153,6 @@ export class PaymentService {
         .digest('hex');
 
       // Return final URL
-      console.log('inputData = ', inputData);
       return `${vnp_Url}?${querystring}&vnp_SecureHash=${vnp_SecureHash}`;
     } catch (error) {
       throw new Error(`Failed to create VNPay payment URL: ${error}`);
