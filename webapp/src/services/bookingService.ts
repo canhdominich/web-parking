@@ -67,6 +67,7 @@ export interface UpdateBookingDto {
 export interface Booking {
     id: number;
     userId: number;
+    note?: string;
     user?: {
         id: number;
         name: string;

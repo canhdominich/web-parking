@@ -15,12 +15,11 @@ export default function BookingStatusPage() {
   const headers = [
     { key: "parkingLotName", title: "Bãi xe" },
     { key: "slotName", title: "Chỗ đỗ" },
-    { key: "userName", title: "Người gửi" },
     { key: "vehiclePlate", title: "Biển số xe" },
     { key: "checkinTime", title: "Thời gian vào" },
     { key: "checkoutTime", title: "Thời gian ra" },
     { key: "status", title: "Trạng thái" },
-    { key: "totalPrice", title: "Tiền phải thu" },
+    { key: "totalPrice", title: "Tiền thu" },
     { key: "paymentStatus", title: "Trạng thái thanh toán" },
     { key: "action", title: "Hành động" }
   ];

@@ -22,6 +22,7 @@ import DatePicker from "../form/date-picker";
 import Select from "../form/Select";
 import moment from "moment";
 import Badge from "../ui/badge/Badge";
+import { createVNPayPaymentUrl } from "@/services/paymentService";
 
 interface BookingStatusDataTableProps {
   onRefresh: () => void;
@@ -49,8 +50,9 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
   const [parkingSlots, setParkingSlots] = useState<ParkingSlot[]>(initialParkingSlots);
   const { isOpen, openModal, closeModal } = useModal();
-
+  const [isPaying, setIsPaying] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -277,6 +279,28 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
         return "Không xác định";
     }
   };
+  const handlePay = async (booking: Booking) => {
+    if (isPaying) return;
+
+    try {
+      setIsPaying(true);
+
+      if (!booking?.id || !booking.totalPrice) {
+        alert("Thiếu thông tin thanh toán");
+        return;
+      }
+
+      const paymentUrl = await createVNPayPaymentUrl(booking.id, Number(booking.totalPrice) * 100);
+      console.log("paymentUrl =", paymentUrl);
+
+      window.location.href = paymentUrl;
+    } catch (error) {
+      console.error(error);
+      alert('Không thể thanh toán');
+    } finally {
+      setIsPaying(false);
+    }
+  };
 
   return (
     <div className="overflow-hidden rounded-xl bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -326,15 +350,6 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
                   <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                     {item?.slot?.name ?? ""}
                   </TableCell>
-                  <TableCell className="px-5 py-4 sm:px-6 text-center">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <span className="block text-gray-500 text-theme-sm dark:text-gray-400">
-                          {item?.user?.name ?? ""}
-                        </span>
-                      </div>
-                    </div>
-                  </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                     {item?.vehicle?.licensePlate ?? ""}
                   </TableCell>
@@ -361,6 +376,9 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
                     >
                       {getBookingStatusLabel(item.status as BookingStatusType)}
                     </Badge>
+                    <p className="text-gray-500 text-theme-xs dark:text-gray-400">
+                      {item?.note ?? ""}
+                    </p>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400">
                     {item?.totalPrice ? formatCurrency(Number(item.totalPrice)) : ""}
@@ -380,11 +398,22 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
                   <TableCell className="px-4 py-3 text-gray-500 text-end text-theme-sm dark:text-gray-400">
                     {user?.role !== UserRole.ParkingGuest && (
                       <div className="flex items-center gap-3">
+                        {item.paymentStatus === BookingPaymentStatus.Unpaid && item.status !== BookingStatus.Cancelled && (
+                          <button
+                            onClick={() => handlePay(item)}
+                            type="button"
+                            disabled={isPaying}
+                            className="btn btn-warning btn-update-event flex w-full justify-center rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-600 sm:w-auto"
+                          >
+                            T.Toán
+                          </button>
+                        )}
+
                         <button
                           onClick={() => handleEdit(item.id)}
                           className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
                         >
-                          Cập nhật
+                          C.Nhật
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}

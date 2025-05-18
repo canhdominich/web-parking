@@ -185,7 +185,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
 
       // Check if this is a VNPay callback
       let url = "/booking";
-      if (queryParams['vnp_ResponseCode'] && queryParams['vnp_SecureHash']) {
+      if (queryParams && queryParams['vnp_ResponseCode'] && queryParams['vnp_SecureHash']) {
         try {
           const result = await handleVNPayWebhook(queryParams);
           alert(result.message);
@@ -562,7 +562,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
               Đóng
             </button>
 
-            {selectedBooking && selectedBooking.id && selectedBooking.paymentStatus === BookingPaymentStatus.Unpaid && (
+            {selectedBooking && selectedBooking.id && selectedBooking.paymentStatus === BookingPaymentStatus.Unpaid && selectedBooking.status !== BookingStatus.Cancelled && (
               <button
                 onClick={() => handlePay(selectedBooking)}
                 type="button"
