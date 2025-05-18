@@ -61,13 +61,13 @@ export class PaymentController {
     );
   }
 
-  @Get('vnpay/payment-return')
+  @Post('vnpay/payment-return')
   @ApiOperation({ summary: 'Handle VNPay payment webhook' })
   @ApiResponse({
     status: 200,
     description: 'Process payment webhook and return result',
   })
-  async handleWebhook(@Query() query: Record<string, string>) {
-    return this.paymentService.handleVNPayWebhook(query);
+  async handleWebhook(@Body() { params }: { params: Record<string, string> }) {
+    return this.paymentService.handleVNPayWebhook(params);
   }
 }

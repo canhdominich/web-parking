@@ -25,9 +25,10 @@ import { BookingPaymentStatus, BookingPaymentStatusOptions, BookingPaymentStatus
 import moment from "moment";
 import axios from "axios";
 import { UserRole } from "@/constants/user.constant";
-import crypto from 'crypto';
-import dateFormat from 'dateformat';
-import { createVNPayPaymentUrl } from "@/services/paymentService";
+import { createVNPayPaymentUrl, handleVNPayWebhook } from "@/services/paymentService";
+import { useSearchParams } from 'next/navigation';
+import router from "next/router";
+
 interface CalendarEvent extends EventInput {
   id: string;
   title: string;
@@ -81,6 +82,7 @@ const getBookingStatusColor = (status: string): string => {
 };
 
 export default function BookingDataTable({ onRefresh, bookings, users, vehicles: initialVehicles, parkingLots, parkingSlots: initialParkingSlots }: BookingProps) {
+  const searchParams = useSearchParams();
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CreateBookingDto | UpdateBookingDto>({
@@ -176,6 +178,33 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
     setEvents(bookings.map(mapBookingToEvent));
   }, [bookings]);
 
+  // Handle VNPay webhook
+  useEffect(() => {
+    const handlePaymentCallback = async () => {
+      const queryParams = Object.fromEntries(searchParams.entries());
+
+      // Check if this is a VNPay callback
+      let url = "/booking";
+      if (queryParams['vnp_ResponseCode'] && queryParams['vnp_SecureHash']) {
+        try {
+          const result = await handleVNPayWebhook(queryParams);
+          alert(result.message);
+          if (result.success) {
+            url = result.redirectUrl;
+          }
+        } catch (error) {
+          console.error('Error processing payment callback:', error);
+          alert('Có lỗi xảy ra khi xử lý thanh toán');
+        }
+        finally {
+          window.location.href = url;
+        }
+      }
+    };
+
+    handlePaymentCallback();
+  }, [searchParams]);
+
   const handleSelectUserChange = async (value: string) => {
     const userId = parseInt(value);
     setFormData({ ...formData, userId, vehicleId: 0 }); // Reset vehicleId when user changes
@@ -243,7 +272,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
         alert("Cập nhật đặt chỗ thành công");
       } else {
         await createBooking(formData as CreateBookingDto);
-        alert("Đặt chỗ thành công");
+        // alert("Đặt chỗ thành công");
       }
       closeModal();
       onRefresh();

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, Not, MoreThanOrEqual } from 'typeorm';
 import { Payment } from './payment.entity';
 import { PaymentFilterDto } from './dto/payment-filter.dto';
 import { User } from '../user/user.entity';
@@ -8,8 +8,14 @@ import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import dateFormat from 'dateformat';
 import { Booking } from 'src/booking/booking.entity';
-import { BookingPaymentStatus } from 'src/constants/booking.constant';
-import { TransactionStatus } from 'src/constants/payment.constant';
+import {
+  BookingPaymentStatus,
+  BookingStatus,
+} from 'src/constants/booking.constant';
+import {
+  PaymentStatus,
+  TransactionStatus,
+} from 'src/constants/payment.constant';
 @Injectable()
 export class PaymentService {
   constructor(
@@ -95,7 +101,7 @@ export class PaymentService {
       const vnp_TmnCode = this.configService.get<string>('VNP_TMNCODE')!;
       const vnp_HashSecret = this.configService.get<string>('VNP_HASHSECRET')!;
       const vnp_Url = this.configService.get<string>('VNP_URL')!;
-      const vnp_Returnurl = `${this.configService.get<string>('HOST')}:${this.configService.get<string>('PORT')}${this.configService.get<string>('VNP_RETURNURL')}`;
+      const vnp_Returnurl = `${this.configService.get<string>('VNP_RETURNURL')}`;
       const vnp_Locale = this.configService.get<string>('VNP_LOCALE') || 'vn';
       const vnp_BankCode = this.configService.get<string>('VNP_BANKCODE') || '';
 
@@ -200,6 +206,31 @@ export class PaymentService {
           query['vnp_ResponseCode'] === '00'
             ? BookingPaymentStatus.Paid
             : BookingPaymentStatus.Unpaid;
+
+        await this.bookingRepository.update(bookingId, {
+          paymentStatus:
+            paymentStatus === BookingPaymentStatus.Paid
+              ? PaymentStatus.Paid
+              : PaymentStatus.Unpaid,
+          status:
+            booking.status === BookingStatus.Pending
+              ? BookingStatus.Booked
+              : booking.status,
+        });
+
+        await this.bookingRepository.update(
+          {
+            id: Not(bookingId),
+            slotId: booking.slotId,
+            status: BookingStatus.Pending,
+            paymentStatus: PaymentStatus.Unpaid,
+            checkinTime: MoreThanOrEqual(booking.checkinTime),
+          },
+          {
+            status: BookingStatus.Cancelled,
+            note: 'Đã có khách thanh toán đặt trước',
+          },
+        );
 
         await this.paymentRepository.upsert(
           {

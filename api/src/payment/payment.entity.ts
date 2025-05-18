@@ -23,7 +23,7 @@ export class Payment {
   bookingId: number;
 
   @ManyToOne(() => Booking)
-  @Index('IDX_booking_id')
+  @Index('IDX_booking_id', { unique: true })
   @JoinColumn({ name: 'bookingId' })
   booking: Booking;
 

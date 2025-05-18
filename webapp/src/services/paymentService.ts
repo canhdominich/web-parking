@@ -30,4 +30,11 @@ export const getPaymentHistoryByBookingIdAndUserId = async (bookingId: number, u
     return res.data;
 }
 
+export const handleVNPayWebhook = async (queryParams: Record<string, string>) => {
+    const res = await httpClient.post(`/payments/vnpay/payment-return`, {
+        params: queryParams
+    });
+    return res.data;
+}
+
 

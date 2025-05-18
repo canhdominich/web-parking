@@ -62,6 +62,9 @@ export class Booking {
   @Column({ type: 'enum', enum: PaymentStatus })
   paymentStatus: PaymentStatus;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  note: string;
+
   @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 
